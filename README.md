@@ -7,3 +7,7 @@ Lab 2 - design the database
 Lab 3 - write real SQL
 
 Lab 4 - connect this Node.js code to MySQL
+
+## CHEAT SHEET
+
+### DATA LEMUR
