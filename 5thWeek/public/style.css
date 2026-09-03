@@ -1,0 +1,24 @@
+* {
+  margin: 0px;
+}
+body {
+  text-shadow: 2px 2px 1px black;
+  color: white;
+  background-color: bisque;
+  font-family:
+    Arial,
+    Helvetica Neue,
+    Helvetica,
+    sans-serif;
+  margin: 20px;
+}
+.header {
+  color: rebeccapurple;
+}
+.subheader {
+  margin-top: 16px;
+}
+
+ul {
+  border: 2px dashed white;
+}
