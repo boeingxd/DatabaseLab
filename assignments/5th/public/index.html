@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bookstore</title>
+</head>
+<body>
+  <h1>Bookstore</h1>
+  <ul id="books"></ul>
+
+  <script>
+    fetch('/books')
+      .then(res => res.json())
+      .then(books => {
+        const list = document.getElementById('books');
+        for (const book of books) {
+          const item = document.createElement('li');
+          item.textContent = `${book.title} by ${book.author} - $${book.price} (${book.stock} in stock)`;
+          list.appendChild(item);
+        }
+      })
+      .catch(err => console.error('Failed to load books:', err));
+  </script>
+</body>
+</html>
