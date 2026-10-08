@@ -1,0 +1,31 @@
+### Lab 9 test requests (VS Code "REST Client" extension, or copy into Postman)
+
+### List courses with their free seats
+GET http://localhost:3000/courses
+
+### A student's enrolments
+GET http://localhost:3000/students/9/enrolments
+
+### Exercise 2 - enrol student 9 in course 3
+POST http://localhost:3000/students/9/enrolments
+Content-Type: application/json
+
+{ "course_id": 3 }
+
+### Exercise 3 - cancel that enrolment
+DELETE http://localhost:3000/students/9/enrolments/3
+
+### Exercise 3 - cancel something that doesn't exist (expect 404)
+DELETE http://localhost:3000/students/9/enrolments/5
+
+### Exercise 4 - student 999 does not exist (the INSERT fails -> rollback)
+POST http://localhost:3000/students/999/enrolments
+Content-Type: application/json
+
+{ "course_id": 3 }
+
+### Exercise 4 - duplicate enrolment: student 1 is already in course 1
+POST http://localhost:3000/students/1/enrolments
+Content-Type: application/json
+
+{ "course_id": 1 }

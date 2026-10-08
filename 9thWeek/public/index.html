@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 9 – Enrolment with Transactions</title>
+<style>
+  :root { --teal:#1E8A82; --navy:#1F3864; --red:#D9534F; --amber:#E0A800; --bg:#F5F7FA; --line:#DADFE6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:#1C1C1C; }
+  header { background:var(--navy); color:#fff; padding:14px 24px; }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:4px 0 0; opacity:.8; font-size:13px; }
+  main { display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 24px; max-width:1200px; margin:auto; }
+  section { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { margin:0 0 10px; font-size:16px; color:var(--navy); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { background:#EEF2F7; color:var(--navy); }
+  .seats { font-weight:700; }
+  .full { color:var(--red); }
+  .neg { color:#fff; background:var(--red); padding:1px 6px; border-radius:4px; }
+  label { font-size:13px; color:#555; display:block; margin:6px 0 2px; }
+  select, input { width:100%; padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; }
+  .row { display:flex; gap:8px; align-items:end; }
+  .row > div { flex:1; }
+  button { background:var(--teal); color:#fff; border:0; border-radius:6px; padding:8px 14px; font-size:14px; cursor:pointer; }
+  button:hover { filter:brightness(1.08); }
+  button.danger { background:var(--red); }
+  button.ghost { background:#fff; color:var(--navy); border:1px solid var(--line); }
+  button.small { padding:4px 10px; font-size:13px; }
+  .hint { font-size:12px; color:#666; margin-top:8px; }
+  #log { font-family: "Courier New", monospace; font-size:13px; max-height:260px; overflow:auto; margin:0; padding:0; list-style:none; }
+  #log li { padding:4px 6px; border-bottom:1px solid var(--line); }
+  .s2 { color:var(--teal); } .s4 { color:var(--amber); } .s5 { color:var(--red); }
+  .badge { display:inline-block; min-width:38px; text-align:center; font-weight:700; }
+  .summary { font-size:14px; margin:8px 0 0; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; padding:12px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CSS326 Lab 9 – Enrolment with Transactions</h1>
+  <p>Front-end for Exercise 2 (enrol) and Exercise 3 (cancel). Seats refresh after every request.</p>
+</header>
+
+<main>
+  <!-- Courses and free seats -->
+  <section>
+    <h2>Courses (free seats)</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Title</th><th>Free seats</th></tr></thead>
+      <tbody id="courses"></tbody>
+    </table>
+    <p class="hint">Seats come from <code>GET /courses</code>. A negative number means the course was oversold.</p>
+  </section>
+
+  <!-- Exercise 2 / 3 : one student -->
+  <section>
+    <h2>Enrol / cancel (Exercises 2 &amp; 3)</h2>
+    <div class="row">
+      <div><label for="student">Student</label><select id="student"></select></div>
+      <div><label for="course">Course</label><select id="course"></select></div>
+      <div style="flex:0"><button id="enrolBtn">Enrol</button></div>
+    </div>
+    <label style="margin-top:12px">This student's enrolments</label>
+    <table>
+      <thead><tr><th>Course</th><th>Title</th><th>Grade</th><th></th></tr></thead>
+      <tbody id="enrolments"></tbody>
+    </table>
+    <p class="hint">Enrol calls <code>POST /students/:id/enrolments</code>; Cancel calls <code>DELETE /students/:id/enrolments/:courseId</code>.</p>
+  </section>
+
+  <!-- Exercise 2 : race -->
+  <section>
+    <h2>Last-seat race (Exercise 2)</h2>
+    <div class="row">
+      <div><label for="raceCourse">Course</label><select id="raceCourse"></select></div>
+      <div><label for="raceSeats">Seats to test with</label><input id="raceSeats" type="number" min="0" value="2"></div>
+    </div>
+    <p class="hint">First run this in Workbench (the page never changes seats by itself):<br>
+      <code id="raceSql">UPDATE courses SET seats = 2 WHERE id = 3;</code></p>
+    <button id="raceBtn">Send enrol requests for ALL students at once</button>
+    <p class="summary" id="raceSummary"></p>
+  </section>
+
+  <!-- Response log -->
+  <section>
+    <h2>Responses <button class="ghost small" id="clearLog" style="float:right">Clear</button></h2>
+    <ul id="log"></ul>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let students = [];
+let courses = [];
+
+// ---- helpers ------------------------------------------------------------
+async function api(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  return { status: res.status, data };
+}
+
+function log(method, url, status, data) {
+  const li = document.createElement('li');
+  const cls = status < 300 ? 's2' : status < 500 ? 's4' : 's5';
+  li.innerHTML = `<span class="badge ${cls}">${status}</span> ${method} ${url} &rarr; ${escapeHtml(JSON.stringify(data))}`;
+  $('log').prepend(li);
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+// ---- loaders ------------------------------------------------------------
+async function loadCourses() {
+  const { status, data } = await api('GET', '/courses');
+  if (status !== 200) { log('GET', '/courses', status, data); return; }
+  courses = data;
+  $('courses').innerHTML = courses.map((c) => {
+    const s = c.seats;
+    const cls = s < 0 ? 'neg' : s === 0 ? 'full' : '';
+    return `<tr><td>${c.id}</td><td>${escapeHtml(c.title)}</td><td class="seats"><span class="${cls}">${s}</span>${s === 0 ? ' (full)' : ''}</td></tr>`;
+  }).join('');
+  for (const sel of ['course', 'raceCourse']) {
+    const keep = $(sel).value;
+    $(sel).innerHTML = courses.map((c) => `<option value="${c.id}">${c.id} – ${escapeHtml(c.title)}</option>`).join('');
+    if (keep) $(sel).value = keep;
+  }
+}
+
+async function loadStudents() {
+  const { status, data } = await api('GET', '/students');
+  if (status !== 200) { log('GET', '/students', status, data); return; }
+  students = data;
+  $('student').innerHTML = students.map((s) => `<option value="${s.id}">${s.id} – ${escapeHtml(s.name)}</option>`).join('');
+}
+
+async function loadEnrolments() {
+  const sid = $('student').value;
+  if (!sid) return;
+  const { status, data } = await api('GET', `/students/${sid}/enrolments`);
+  if (status !== 200) { log('GET', `/students/${sid}/enrolments`, status, data); return; }
+  $('enrolments').innerHTML = data.length === 0
+    ? '<tr><td colspan="4" class="hint">No enrolments</td></tr>'
+    : data.map((e) => `<tr><td>${e.course_id}</td><td>${escapeHtml(e.title)}</td><td>${e.grade ?? ''}</td>
+        <td><button class="danger small" data-course="${e.course_id}">Cancel</button></td></tr>`).join('');
+}
+
+async function refresh() {
+  await loadCourses();
+  await loadEnrolments();
+}
+
+// ---- Exercise 2 : enrol ---------------------------------------------------
+$('enrolBtn').addEventListener('click', async () => {
+  const sid = $('student').value;
+  const cid = Number($('course').value);
+  const url = `/students/${sid}/enrolments`;
+  const { status, data } = await api('POST', url, { course_id: cid });
+  log('POST', `${url} {course_id:${cid}}`, status, data);
+  refresh();
+});
+
+// ---- Exercise 3 : cancel --------------------------------------------------
+$('enrolments').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-course]');
+  if (!btn) return;
+  const sid = $('student').value;
+  const url = `/students/${sid}/enrolments/${btn.dataset.course}`;
+  const { status, data } = await api('DELETE', url);
+  log('DELETE', url, status, data);
+  refresh();
+});
+
+// ---- Exercise 2 : race (all students at the same moment) -------------------
+$('raceBtn').addEventListener('click', async () => {
+  const cid = Number($('raceCourse').value);
+  const before = courses.find((c) => c.id === cid)?.seats;
+  $('raceSummary').textContent = 'Sending…';
+  const results = await Promise.all(students.map((s) =>
+    api('POST', `/students/${s.id}/enrolments`, { course_id: cid })
+      .then((r) => ({ ...r, sid: s.id }))));
+  results.forEach((r) => log('POST', `/students/${r.sid}/enrolments {course_id:${cid}}`, r.status, r.data));
+  const counts = {};
+  results.forEach((r) => { counts[r.status] = (counts[r.status] || 0) + 1; });
+  await refresh();
+  const after = courses.find((c) => c.id === cid)?.seats;
+  $('raceSummary').innerHTML =
+    `Course ${cid}: seats ${before} &rarr; <b>${after}</b>. Responses: ` +
+    Object.entries(counts).map(([k, v]) => `${v} &times; ${k}`).join(', ') +
+    (after < 0 ? ' <span class="neg">OVERSOLD</span>' : '');
+});
+
+$('raceSeats').addEventListener('input', () => {
+  $('raceSql').textContent =
+    `UPDATE courses SET seats = ${$('raceSeats').value || 0} WHERE id = ${$('raceCourse').value};`;
+});
+$('raceCourse').addEventListener('change', () => $('raceSeats').dispatchEvent(new Event('input')));
+$('student').addEventListener('change', loadEnrolments);
+$('clearLog').addEventListener('click', () => { $('log').innerHTML = ''; });
+
+// ---- start -----------------------------------------------------------------
+(async () => {
+  await loadStudents();
+  await loadCourses();
+  $('raceCourse').value = '3';
+  $('raceSeats').dispatchEvent(new Event('input'));
+  await loadEnrolments();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "css326-lab9-exercises",
+  "version": "1.0.0",
+  "description": "CSS326 Lab 9 - Transactions (in-class exercises starter)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "race": "node scripts/race.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "mysql2": "^3.24.5"
+  }
+}
