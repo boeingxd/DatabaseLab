@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Select offering — CSS326 — SIIT Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav__inner">
+    <a href="dashboard.html" class="brand">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/><path d="M3 13.5l7 3.5 7-3.5"/></svg>
+      SIIT Study Hub
+    </a>
+    <nav class="navlinks" aria-label="Primary">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="catalogue.html" aria-current="page">Courses</a>
+    </nav>
+    <div class="nav-right">
+      <div class="avatar" title="Touch-ing Yinyong">TY</div>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell shell--narrow">
+  <div class="page-head">
+    <div class="breadcrumb">
+      <a href="course.html">CSS326</a>
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+      <span>Select offering</span>
+    </div>
+    <h1>CSS326</h1>
+    <p class="page-sub">Optional: narrow to one semester's submissions instead of the combined view. Reached from the course page's semester picker.</p>
+  </div>
+
+  <a href="course.html" class="card card-pad mb-4" style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);border-color:var(--accent);border-width:1.5px;">
+    <div>
+      <div style="font-weight:600;font-size:15px;">All semesters combined</div>
+      <p class="text-sm muted mt-2">3 offerings · 12 submissions total — aggregate stats via <span class="mono">fn_course_summary(course_id)</span></p>
+    </div>
+    <span class="link-btn">View
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+    </span>
+  </a>
+
+  <p class="section-title mt-8">Or view one semester</p>
+  <div class="list">
+    <a class="list-row" href="course.html">
+      <div class="list-row__body">
+        <div class="list-row__title mono">2026/1</div>
+        <div class="list-row__meta">Dr. A · 5 submissions</div>
+      </div>
+      <span class="link-btn">View <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg></span>
+    </a>
+    <a class="list-row" href="course.html">
+      <div class="list-row__body">
+        <div class="list-row__title mono">2025/2</div>
+        <div class="list-row__meta">Dr. B · 4 submissions</div>
+      </div>
+      <span class="link-btn">View <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg></span>
+    </a>
+    <a class="list-row" href="course.html">
+      <div class="list-row__body">
+        <div class="list-row__title mono">2025/1</div>
+        <div class="list-row__meta">Dr. A · 3 submissions</div>
+      </div>
+      <span class="link-btn">View <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg></span>
+    </a>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

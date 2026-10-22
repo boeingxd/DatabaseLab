@@ -1,0 +1,345 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\definecolor{inkc}{RGB}{22,35,44}
+\definecolor{accentc}{RGB}{18,64,71}
+\definecolor{mutedc}{RGB}{82,104,114}
+\definecolor{rulec}{RGB}{209,218,220}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accentc,
+  urlcolor=accentc,
+  citecolor=accentc,
+  pdftitle={SIIT Study Hub -- Presentation Prep Script},
+  pdfauthor={Touch-ing Yinyong, Pinyapach Sinlapakantang, Yayika Tinner}
+}
+
+\titleformat{\section}{\large\bfseries\color{accentc}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{inkc}}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.1em}{0.4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\color{mutedc} SIIT Study Hub -- Presentation Prep}
+\fancyhead[R]{\small\color{mutedc} CSS326 Week 7}
+\fancyfoot[C]{\small\color{mutedc} \thepage}
+
+\newcommand{\qitem}[2]{%
+  \par\medskip\noindent\textbf{\color{accentc}Q:} #1\par
+  \noindent\textbf{A:} #2\par
+}
+
+\newenvironment{tightlist}{\begin{itemize}[leftmargin=1.4em,itemsep=2pt,topsep=2pt]}{\end{itemize}}
+
+\title{\color{accentc}\textbf{SIIT Study Hub}\\[0.2em]\Large Presentation Prep Script \& Q\&A Rehearsal\\[0.3em]\normalsize\color{mutedc} CSS326 Database Programming Laboratory --- Week 7 Proposal}
+\author{Touch-ing Yinyong (6722782164) \and Pinyapach Sinlapakantang (6722771886) \and Yayika Tinner (6722781026)}
+\date{Prepared for the Week 7 proposal presentation}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\noindent\textbf{Purpose of this document.} This is not slide content. It is what each of us reads the night before (and skims five minutes before walking in) so that everyone --- not just whoever designed a given piece --- can explain the whole project, defend a design decision on the spot, and answer a question about a part we didn't personally build. If you remember one thing from this document, make it Section~8 (Anticipated Q\&A).
+
+\tableofcontents
+
+% =========================================================
+\section{The 60-Second Pitch}
+
+Say this cold, without slides, if someone asks ``what are you building'':
+
+\begin{quote}
+\itshape
+``Every year, SIIT students lose institutional knowledge about a course the moment the students who took it graduate or move on --- what the midterm actually covers, how hard it really is, what to study. Right now that knowledge lives and dies in LINE groups, senior hand-offs, and Google Drive links that rot between cohorts. SIIT Study Hub is a SIIT-gated web archive where students submit \emph{structured} exam intelligence --- format, topics, difficulty, allowed aids --- plus study materials, organized by course. We're not redistributing actual exam papers, which would be a copyright and academic-integrity problem; we're capturing structured \emph{descriptions} of exams. It's a from-scratch MySQL and Node.js/Express redesign of an idea that already exists as a live Postgres/Supabase product for a different course, rebuilt here with a cleaner schema based on real problems we found auditing that prototype.''
+\end{quote}
+
+\subsection{Why this matters as a database project, specifically}
+This is a database course, so if the pitch above is all you say, you've under-answered. The follow-up sentence should always be: \emph{``the interesting database problems are: modeling one submission that's either an exam report or a study material without duplicating logic, keeping integrity rules that MySQL's table-level \texttt{CHECK} can't express, and moving trust-sensitive operations like moderation into the database layer instead of the application.''} That sentence previews Sections 4--6 below and is what actually gets graded.
+
+% =========================================================
+\section{Tech Stack Cheat Sheet}
+
+If asked ``what's your stack'' -- answer in this order (layer, then technology, then the one-line why):
+
+\begin{longtable}{@{}p{0.17\linewidth} p{0.24\linewidth} p{0.51\linewidth}@{}}
+\toprule
+\textbf{Layer} & \textbf{Technology} & \textbf{Why} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Layer} & \textbf{Technology} & \textbf{Why} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Database & MySQL 8.x & Fixed by the course track (``MySQL \& Node.js (RDBMS)''); run locally, dev DB at \texttt{localhost}. \\[4pt]
+Driver & \texttt{mysql2/promise} & Promise-based, supports prepared statements (parameterized queries -- prevents SQL injection) and \texttt{CALL} for stored procedures. \\[4pt]
+Connection strategy & \texttt{mysql.createPool(...)} & A pool, not a single connection -- reuses connections across concurrent requests instead of opening/closing one per request. \\[4pt]
+Backend framework & Node.js + Express & Required by the course; thin routing layer over the driver. \\[4pt]
+Backend structure & \texttt{routes/*.route.js}\newline + \texttt{controller/*.\allowbreak controller.js} & Routes just map HTTP verb + path to a controller function; controllers hold the actual query/procedure-call logic. Keeps HTTP concerns separate from data-access logic. \\[4pt]
+Frontend & Static HTML/CSS/JS via \texttt{express.static}, from \texttt{public/} & No separate frontend framework required by the course; server-rendered/static pages calling the Express API. \\[4pt]
+Transactions & \texttt{BEGIN} / \texttt{COMMIT} / \texttt{ROLLBACK} inside stored procedures & Introduced Week 10; used specifically where a submission touches two tables (Content + subtype) that must succeed or fail together. \\[4pt]
+Semi-structured data & \texttt{JSON} columns + X DevAPI (document-store module) & Week 12 addition; \texttt{format}/\texttt{topics} on \texttt{ExamIntel} are declared \texttt{JSON} now, but querying them via the document-store API is deliberately deferred. \\
+\end{longtable}
+
+\subsection{If asked ``why MySQL and not Postgres / MongoDB / SQLite''}
+Direct answer: \emph{the track is fixed by the course} -- CSS326's ``Revised Track'' requires MySQL \& Node.js. But there is a real answer underneath the logistics one, and it's worth giving: a live Postgres/Supabase version of this same product idea already exists (see the Q\&A entry ``What's the difference between this and the already-existing SIIT Study Hub product?'' in Section~8.2), so this project is intentionally a chance to redo the schema on a different RDBMS with different constraint capabilities (e.g. MySQL's single-table \texttt{CHECK}) and apply lessons learned, not a case where the team picked MySQL freely.
+
+% =========================================================
+\section{Architecture Walkthrough: What Happens on a Request}
+
+Walk through this mentally for \emph{any} user action -- it is the same shape every time:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Browser} sends an HTTP request (e.g. \texttt{POST /content}) to Express.
+  \item \textbf{Route} (\texttt{routes/content.route.js}) matches the verb + path and calls a controller function -- it does no logic itself.
+  \item \textbf{Controller} (\texttt{controller/content.controller.js}) validates input shape, then either runs a parameterized SQL query \emph{or} calls a stored procedure via \texttt{CALL sp\_...(?, ?, ...)} through the \texttt{mysql2} pool.
+  \item \textbf{MySQL} executes the query/procedure. If it's a procedure, MySQL-side logic (validation, transaction, trigger firing) happens \emph{inside the database}, not in Node.
+  \item \textbf{Response} flows back up: MySQL $\rightarrow$ mysql2 pool $\rightarrow$ controller (shapes JSON) $\rightarrow$ route $\rightarrow$ browser.
+\end{enumerate}
+
+\subsection{The ``defense in depth'' idea -- expect this question}
+A sharp question a grader might ask: \emph{``you validate the SIIT email domain in the app layer -- why also enforce it with a trigger? Isn't that redundant?''}
+
+Answer: it's redundant \emph{by design}. App-layer validation is for good UX (fast, friendly error messages). The database-layer trigger (\texttt{trg\_enforce\_siit\_domain}) is the actual guarantee -- it's what stops a bad row from ever existing, regardless of whether the write came through our Express app, a future second client, a script, or a bug that skipped the app check. The same logic applies to moderation authorization living in \texttt{sp\_moderate\_content} rather than only in an Express middleware: a compromised or buggy client can't forge a takedown because the check is enforced where the write actually happens.
+
+% =========================================================
+\section{Database Design Deep-Dive}
+
+\subsection{The nine tables}
+\begin{longtable}{@{}p{0.20\linewidth} p{0.72\linewidth}@{}}
+\toprule
+\textbf{Table} & \textbf{What it holds} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Table} & \textbf{What it holds} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{User} & Account: SIIT email (domain-verified), handle, salted+hashed password, \texttt{is\_admin} moderator flag. \\[4pt]
+\texttt{Course} & A course catalog entry: code, title, program, credits. \\[4pt]
+\texttt{Instructor} & Just a name/id -- who can teach a \texttt{CourseOffering}. \\[4pt]
+\texttt{CourseOffering} & \emph{(new table)} A specific (course, instructor, semester) combination. \\[4pt]
+\texttt{Content} & \emph{Supertype.} Shared fields for any submission: author, course offering, optional file attachment, moderation fields, timestamps. \\[4pt]
+\texttt{ExamIntel} & \emph{Subtype of Content.} Exam type, format (JSON), topics (JSON), allowed aids, duration, time pressure, difficulty, advice. \\[4pt]
+\texttt{Materials} & \emph{Subtype of Content.} Title, type, markdown body. \\[4pt]
+\texttt{Vote} & One row per (user, content) up/down vote. \\[4pt]
+\texttt{Report} & One row per (user, content) report, with resolution state. \\
+\end{longtable}
+
+\subsection{The ISA (supertype/subtype) design -- the core modeling decision}
+\texttt{Content ISA \{ExamIntel, Materials\}}, \textbf{disjoint and total}: every \texttt{Content} row is \emph{exactly one} of the two subtypes, never both, never neither. In plain English: one drop box (\texttt{Content}) with two flavors (\texttt{ExamIntel} for ``what was on the test'', \texttt{Materials} for ``what helps you study for it''). \texttt{content\_type} is the discriminator column (\texttt{ENUM('exam\_intel','materials')}), and each subtype table shares its primary key with \texttt{Content} (\texttt{content\_id} is both PK and FK in \texttt{ExamIntel}/\texttt{Materials}).
+
+\textbf{Why not two completely separate tables with no shared supertype?} Because \texttt{Vote} and \texttt{Report} need to point at ``a submission'' regardless of which kind it is. Without a shared supertype, a vote or report would need two nullable foreign keys (one to \texttt{ExamIntel}, one to \texttt{Materials}) with no real constraint stopping both or neither from being set -- exactly the ``no real foreign key'' bug found auditing the old prototype. With \texttt{Content} as the single target, \texttt{Vote.content\_id} and \texttt{Report.content\_id} are simple, honest foreign keys.
+
+\subsection{Relationship sets, in plain language}
+\begin{tightlist}
+  \item A \texttt{User} \textbf{authors} many \texttt{Content} rows (1:M).
+  \item \texttt{User}--\texttt{Vote}--\texttt{Content} is \textbf{M:N} (a user can vote on many submissions; a submission gets votes from many users), with \texttt{value} (+1/-1) as the relationship's own attribute.
+  \item \texttt{User}--\texttt{Report}--\texttt{Content} is \textbf{M:N} the same way, with \texttt{reason} and \texttt{resolved} as attributes.
+  \item A \texttt{Course} \textbf{has} many \texttt{CourseOffering}s (1:M); an \texttt{Instructor} \textbf{teaches} many \texttt{CourseOffering}s (1:M); a \texttt{CourseOffering} \textbf{has} many \texttt{Content} rows (1:M).
+\end{tightlist}
+
+\subsection{The normalization story -- a genuine ``we learned from a real bug'' beat}
+The old working prototype stored instructor name and semester as \textbf{duplicated free text on every single submission}. That's a classic normalization smell: the same fact (``Dr.\ A taught CSS326 in 2026/1'') repeated on hundreds of rows, capable of drifting out of sync (typo in one row, correct in another). \texttt{CourseOffering} fixes this by pulling (course, instructor, semester) into its own table with a uniqueness constraint on \texttt{(course\_id, semester, instructor\_id)}, and every \texttt{Content} row references \emph{one} \texttt{CourseOffering} instead of repeating the text. This is worth telling as a story if asked ``what would you do differently from the prototype'' -- it's a concrete, defensible answer instead of a vague ``we'd make it better.''
+
+\subsection{Why \texttt{file\_path} lives on \texttt{Content}, not just \texttt{Materials}}
+First instinct was to put the optional file attachment only on \texttt{Materials} (notes/cheat sheets are files, right?). But a student attaching a scanned cheat sheet \emph{to an exam-intel report} is just as real a case. So \texttt{file\_path} moved up to the shared supertype, \texttt{Content}. \textbf{The tradeoff, and the actual interesting database point:} MySQL's \texttt{CHECK} constraint can only reference columns within a single table. The rule ``a Materials row needs either body text or an attached file'' now spans two tables (\texttt{Content.file\_path} and \texttt{Materials.body\_md}), so it \emph{cannot} be a table-level \texttt{CHECK} anymore. That validation moved into \texttt{sp\_submit\_content} instead. \textbf{This is a genuinely good answer if asked ``give an example of a constraint that has to live in application/procedure logic instead of the schema.''}
+
+% =========================================================
+\section{Procedures, Functions \& Triggers --- What and Why}
+
+\subsection{Triggers}
+\begin{longtable}{@{}p{0.22\linewidth} p{0.22\linewidth} p{0.48\linewidth}@{}}
+\toprule
+\textbf{Name} & \textbf{Fires on} & \textbf{What it does, and why} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Name} & \textbf{Fires on} & \textbf{What it does, and why} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{trg\_vote\_score} & AFTER INSERT/DELETE on \texttt{Vote} & Updates a denormalized helpfulness score on the parent \texttt{Content} row. \emph{Why:} so the course page can sort/filter by score without re-aggregating all votes on every read. \\[4pt]
+\texttt{trg\_enforce\_\allowbreak siit\_domain} & BEFORE INSERT/UPDATE on \texttt{User} & Rejects any row whose email isn't on the SIIT domain. \emph{Why:} a second, unbypassable copy of the app's own rule -- a bug or a second write path can't sneak around it. \\[4pt]
+\texttt{trg\_stamp\_\allowbreak resolution} & BEFORE UPDATE on \texttt{Report} & When \texttt{resolved} flips true, stamps \texttt{resolved\_at}/\texttt{resolved\_by} itself. \emph{Why:} the app never sets those columns directly, so a moderation record can't be forged by a compromised client. \\
+\end{longtable}
+
+\subsection{Stored procedures \& functions}
+\begin{longtable}{@{}p{0.30\linewidth} p{0.62\linewidth}@{}}
+\toprule
+\textbf{Name} & \textbf{What it does, and why} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Name} & \textbf{What it does, and why} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{sp\_register\_user(\allowbreak email, handle, password)} & Validates SIIT domain + password policy, generates a random salt, hashes the password, inserts \texttt{User}. \emph{Why:} keeps the hashing/salting logic (a security-critical operation) in one place, callable the same way from any client. \\[4pt]
+\texttt{sp\_submit\_content(...)} & Inserts \texttt{Content} and its subtype row (\texttt{ExamIntel} or \texttt{Materials}) inside one \texttt{BEGIN}/\texttt{COMMIT}/\texttt{ROLLBACK} transaction; for \texttt{materials}, also checks that \texttt{body\_md} or \texttt{file\_path} is present. \emph{Why a transaction:} without it, a crash between the two inserts leaves an orphaned \texttt{Content} row with no subtype. \emph{Why the check lives here:} see Section~4.5 -- it can't be a table \texttt{CHECK} once the two columns are on different tables. \\[4pt]
+\texttt{sp\_moderate\_\allowbreak content(\allowbreak content\_id, admin\_id, remove, note)} & Checks the caller's \texttt{is\_admin} flag, then soft-deletes (or restores) the \texttt{Content} row and auto-resolves open reports against it. \emph{Why:} centralizes moderation authorization in the database instead of trusting the application layer alone -- see the ``defense in depth'' box in Section~3.1. \\[4pt]
+\texttt{fn\_course\_\allowbreak summary(\allowbreak course\_id)} & Returns aggregate stats for a course (avg.\ difficulty, avg.\ time pressure, most-cited topics), computed in SQL. \emph{Why a function, and why in SQL:} every screen that needs these stats gets a single consistent computation instead of each caller re-implementing the aggregation client-side. \\
+\end{longtable}
+
+\subsection{One-line answer to ``why not just do this in Express/JavaScript?''}
+Because the three things procedures/triggers buy you -- \textbf{atomicity} (all-or-nothing across two tables), \textbf{integrity} (a rule that's enforced no matter which client writes), and \textbf{automation} (a side effect like a score update or a timestamp that should never depend on the caller remembering to do it) -- are exactly the guarantees that live at the database layer, closer to the data than any one application client.
+
+% =========================================================
+\section{Physical Design Notes}
+
+\begin{tightlist}
+  \item \textbf{ENUM} is used for closed, small vocabularies known in advance: \texttt{content\_type} (\texttt{exam\_intel}/\texttt{materials}), \texttt{exam\_type} (\texttt{midterm}/\texttt{final}/\texttt{quiz}), \texttt{allowed\_aids}, \texttt{Materials.type}. Cheap to store, self-documenting, and the database rejects an invalid value outright.
+  \item \textbf{JSON} is used for \texttt{ExamIntel.format} and \texttt{ExamIntel.topics} -- both are variable-length lists (an exam can be MCQ \emph{and} written; it can cover an open-ended set of topics) that don't fit a fixed ENUM or a separate join table cleanly at this stage. The column type is declared now; querying it through MySQL's document-store (X DevAPI) module is a \textbf{Week 12} deliverable, not done yet -- if asked ``is the JSON/NoSQL part done,'' the honest answer is \emph{``the column exists, the document-store querying work is scheduled for Week 12 per the syllabus.''}
+  \item \textbf{Soft delete}, not hard delete, for moderation: \texttt{Content} has \texttt{removed\_at}/\texttt{removed\_by}/\texttt{removed\_note} instead of a \texttt{DELETE} statement. This preserves the audit trail (who removed what, when, why) and lets \texttt{sp\_moderate\_content} \emph{restore} content -- impossible if the row were actually deleted.
+  \item \textbf{Unique constraints} worth knowing cold: \texttt{CourseOffering(course\_id, semester, instructor\_id)}, \texttt{Vote(content\_id, user\_id)} (one vote per user per submission), \texttt{Report(content\_id, reporter\_id)} (one open report per user per submission).
+  \item \textbf{Password storage}: \texttt{password\_hash} (VARCHAR) + \texttt{salt} (VARBINARY) as separate columns, set only by \texttt{sp\_register\_user} -- never plaintext, never touched directly by the app layer.
+\end{tightlist}
+
+% =========================================================
+\section{User Flow Walkthrough (know this cold)}
+
+Each step names the concrete DB operation -- this is the single best thing to have memorized, because it's the fastest way to answer ``walk me through what happens when a user does X.''
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{Sign up.} Email + handle + password $\rightarrow$ app checks domain/password policy $\rightarrow$ \texttt{CALL sp\_register\_user(...)} salts, hashes, inserts \texttt{User}.
+  \item \textbf{Browse courses.} Search/filter by code or title $\rightarrow$ indexed \texttt{SELECT} on \texttt{Course}.
+  \item \textbf{View a course page.} \texttt{SELECT} across \texttt{CourseOffering} and \texttt{Content} (joined to its subtype); aggregate stats from \texttt{fn\_course\_summary(course\_id)}.
+  \item \textbf{Submit exam intelligence.} Form (format, topics, difficulty, advice) $\rightarrow$ \texttt{CALL sp\_submit\_content(...)} inserts \texttt{Content} + \texttt{ExamIntel} in one transaction.
+  \item \textbf{Submit study material.} Notes and/or file $\rightarrow$ same procedure inserts \texttt{Content} + \texttt{Materials}, checking body text or file is present.
+  \item \textbf{Edit/delete own submission.} \texttt{UPDATE}/\texttt{DELETE} on \texttt{Content} + subtype, scoped to \texttt{author\_id}, inside a transaction.
+  \item \textbf{Vote.} \texttt{INSERT}/\texttt{UPDATE} on \texttt{Vote} $\rightarrow$ \texttt{trg\_vote\_score} updates the denormalized score.
+  \item \textbf{Report.} \texttt{INSERT} into \texttt{Report}.
+  \item \textbf{Moderate.} \texttt{CALL sp\_moderate\_content(...)} soft-deletes \texttt{Content} and auto-resolves its open reports.
+\end{enumerate}
+
+% =========================================================
+\section{Anticipated Q\&A}
+
+\subsection{Tech stack \& architecture}
+
+\qitem{What's the tech stack?}{MySQL 8.x, Node.js + Express, \texttt{mysql2/promise} with connection pooling. See Section~2 for the full table and the ``why'' for each layer.}
+
+\qitem{Why Express and not [some other framework]?}{Fixed by the course track. Within that constraint, routes stay thin (map HTTP verb+path to a controller) and controllers hold the actual query/procedure-call logic -- a standard separation that keeps HTTP concerns out of data-access code.}
+
+\qitem{Why a connection pool instead of one connection?}{A single shared connection would serialize every request against the database and become a bottleneck under concurrent users; a pool lets multiple requests get their own connection from a reused set instead of opening/closing a TCP connection per request.}
+
+\qitem{How do you prevent SQL injection?}{\texttt{mysql2} prepared statements / parameterized queries -- user input is always passed as a bound parameter (\texttt{?}), never string-concatenated into SQL. Same applies to procedure calls (\texttt{CALL sp\_x(?, ?, ...)}).}
+
+\subsection{Database design}
+
+\qitem{Why the supertype/subtype (ISA) design instead of one big table or two separate tables?}{One big table would carry a pile of nullable columns that only apply to one kind of submission. Two fully separate tables would break \texttt{Vote}/\texttt{Report}, which need a single, honest foreign key target regardless of submission kind. The supertype gives both subtypes a shared identity to be voted on/reported against, while each subtype table only carries the columns relevant to it. See Section~4.2.}
+
+\qitem{What does ``disjoint, total'' mean?}{\emph{Disjoint}: a \texttt{Content} row is never both an \texttt{ExamIntel} and a \texttt{Materials} at once. \emph{Total}: every \texttt{Content} row \emph{must} be one of the two -- there's no ``bare'' Content row with no subtype. Enforced in practice by always inserting both rows together inside \texttt{sp\_submit\_content}'s transaction.}
+
+\qitem{What's the difference between this and the already-existing SIIT Study Hub product?}{That's a live Postgres/Supabase app built for a different course (Digital Business Experience, not CSS326). This is a from-scratch MySQL/Node.js redesign for CSS326's required stack -- same product idea, reused lessons (e.g.\ the \texttt{CourseOffering} normalization fix), but a deliberately different schema, not a port.}
+
+\qitem{Is the schema normalized? What normal form?}{Yes -- entities are split so that no non-key attribute depends on anything other than the whole key of its own table (3NF in spirit): instructor/semester data lives once in \texttt{CourseOffering} rather than repeated per submission; subtype-specific attributes (exam format vs.\ markdown body) live only on the table they apply to, not as nullable columns on a shared table.}
+
+\qitem{Why do \texttt{ExamIntel} and \texttt{Materials} share their primary key with \texttt{Content} instead of having their own auto-increment ID?}{This is exactly how supertype/subtype (table-per-subtype / class-table inheritance) is implemented relationally: the subtype's PK \emph{is} the supertype's PK, also declared as a FK back to \texttt{Content}. It guarantees a 1:1 relationship between a \texttt{Content} row and its subtype row -- there's no way to create an \texttt{ExamIntel} row that doesn't correspond to exactly one \texttt{Content} row.}
+
+\subsection{Procedures, triggers \& transactions}
+
+\qitem{What's the difference between a stored procedure, a function, and a trigger, and where did you use each?}{A \textbf{procedure} is explicitly called by the app (\texttt{CALL sp\_x(...)}) to perform an action, optionally returning nothing or a result set -- used for \texttt{sp\_register\_user}, \texttt{sp\_submit\_content}, \texttt{sp\_moderate\_content}. A \textbf{function} is called inline within a query/expression and returns a single value -- used for \texttt{fn\_course\_summary}. A \textbf{trigger} fires automatically on an INSERT/UPDATE/DELETE event, with no explicit call from the app -- used for the three triggers in Section~5.1.}
+
+\qitem{What happens if \texttt{sp\_submit\_content} fails halfway through (e.g.\ the subtype insert fails after the Content insert succeeded)?}{It can't leave a half-written row: both inserts happen inside one \texttt{BEGIN}/\texttt{COMMIT}/\texttt{ROLLBACK} block, so if the second insert fails, the whole transaction rolls back and the first insert is undone too. That's the entire reason it's a transaction and not two separate \texttt{INSERT} statements from the app.}
+
+\qitem{What happens if two users vote on the same content at nearly the same time -- any concurrency concerns?}{The \texttt{Vote(content\_id, user\_id)} unique constraint stops the same user from voting twice on the same content (a second insert attempt fails/upserts instead of duplicating). \texttt{trg\_vote\_score} recalculates the denormalized score from the actual \texttt{Vote} rows on every insert/delete, so even under concurrent votes from \emph{different} users, the trigger fires per-row and the score stays consistent -- it's not a read-modify-write race in application code.}
+
+\qitem{Why can't the ``Materials needs body text or a file'' rule be a table \texttt{CHECK}?}{Because MySQL's \texttt{CHECK} constraint can only reference columns within the \emph{same} table, and the two columns involved -- \texttt{Content.file\_path} and \texttt{Materials.body\_md} -- live in different tables after the supertype/subtype split. The rule moved into \texttt{sp\_submit\_content} instead. See Section~4.5.}
+
+\qitem{Why soft-delete instead of an actual \texttt{DELETE}?}{Moderation needs to be reversible (\texttt{sp\_moderate\_content} can restore content) and auditable (who removed it, when, why). A hard \texttt{DELETE} would destroy that information permanently.}
+
+\subsection{Security}
+
+\qitem{How are passwords stored?}{Never in plaintext. \texttt{sp\_register\_user} generates a random per-user salt (\texttt{VARBINARY}), hashes the salted password, and stores only \texttt{password\_hash} + \texttt{salt} -- both set exclusively by that procedure.}
+
+\qitem{How do you stop a non-admin from calling the moderation endpoint directly?}{\texttt{sp\_moderate\_content} checks the caller's \texttt{is\_admin} flag \emph{inside the procedure itself} before taking any action -- so even if a request reached the database layer through a path that skipped an app-level check, the procedure still refuses the action. Same ``defense in depth'' reasoning as Section~3.1.}
+
+\subsection{Scope \& what's not done yet}
+
+\qitem{Is the JSON/NoSQL (X DevAPI) part finished?}{No, and that's intentional -- it's a Week 12 syllabus milestone. The \texttt{JSON} column type for \texttt{format}/\texttt{topics} is already decided in the physical design; querying it via the document-store API comes later. Framing: ``we know exactly what we don't know yet'' is a legitimate proposal-stage answer.}
+
+\qitem{What's actually built right now, at the proposal stage, vs.\ planned?}{Built: the full ER design, the 9-table schema, the physical design (data types, keys, constraints), and the reasoning behind every procedure/trigger. Not yet built: the actual Express routes/controllers, the procedures/triggers as executable SQL, and the frontend -- those land Weeks 9--13 per the timeline in Section~9.}
+
+\subsection{Team \& process}
+
+\qitem{Who did what?}{Touch-ing Yinyong -- database design lead (ER diagram, schema, normalization decisions, physical design, this proposal). Pinyapach Sinlapakantang -- backend, security \& triggers (Express routes, \texttt{mysql2} integration, the four procedures/functions, the three triggers, auth, transactions). Yayika Tinner -- frontend, UI \& testing (course pages, submission forms, moderation queue view, transaction/concurrency test cases).}
+
+% =========================================================
+\section{Work Distribution \& Timeline}
+
+\begin{longtable}{@{}p{0.24\linewidth} p{0.20\linewidth} p{0.48\linewidth}@{}}
+\toprule
+\textbf{Area} & \textbf{Owner} & \textbf{What it covers} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Area} & \textbf{Owner} & \textbf{What it covers} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Database design \& docs & Touch-ing Yinyong & ER diagram, normalization, physical design table, keeping schema in sync, this document and the proposal. \\[4pt]
+Backend, triggers \& security & Pinyapach Sinlapakantang & Express routes, \texttt{mysql2} queries, 4 procedures/functions, 3 triggers, password hashing, privilege checks, transaction boundaries. \\[4pt]
+Frontend, UI \& testing & Yayika Tinner & Course catalogue, course page, submission forms, moderation queue view, transaction/concurrency test cases. \\
+\end{longtable}
+
+\bigskip
+\begin{longtable}{@{}p{0.08\linewidth} p{0.14\linewidth} p{0.68\linewidth}@{}}
+\toprule
+\textbf{Week} & \textbf{Date} & \textbf{Milestone} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Week} & \textbf{Date} & \textbf{Milestone} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+7 & Sept 17 & Project proposal presentation (this document supports it) \\[4pt]
+8 & Sept 24 & Midterm exam week -- no project work scheduled \\[4pt]
+9 & Oct 1 & Stand up the full schema (all 9 tables); basic Express CRUD for Course/Content \\[4pt]
+10 & Oct 8 & Implement \texttt{sp\_submit\_content} as a transaction; auth via \texttt{sp\_register\_user} \\[4pt]
+11 & Oct 15 & Implement the three triggers, \texttt{sp\_moderate\_content}, DB privilege hardening \\[4pt]
+12 & Oct 22 & JSON / X DevAPI module -- \texttt{format}/\texttt{topics} as JSON, document-store queries \\[4pt]
+13 & Oct 29 & Revision week -- polish UI, write test cases, fix bugs \\[4pt]
+14 & Nov 5 & Project demonstration \\[4pt]
+15 & Nov 12 & Final exam \\
+\end{longtable}
+
+% =========================================================
+\section{Glossary (fast lookup if a term catches you off guard)}
+
+\begin{tightlist}
+  \item \textbf{ISA / supertype-subtype}: modeling one entity (\texttt{Content}) as a general case with specialized variants (\texttt{ExamIntel}, \texttt{Materials}) that share the supertype's primary key.
+  \item \textbf{Disjoint / total}: disjoint = subtypes don't overlap; total = every supertype row has a subtype.
+  \item \textbf{ACID}: Atomicity, Consistency, Isolation, Durability -- the guarantees a transaction provides. \texttt{sp\_submit\_content}'s transaction is specifically about \emph{atomicity}.
+  \item \textbf{Normalization}: organizing tables so each fact is stored once, avoiding update anomalies (the \texttt{CourseOffering} fix in Section~4.4 is a normalization example).
+  \item \textbf{Denormalization}: deliberately storing a derived/duplicated value for read performance -- the vote score on \texttt{Content}, kept in sync by \texttt{trg\_vote\_score}.
+  \item \textbf{ENUM}: a MySQL column type restricted to a fixed list of string values.
+  \item \textbf{Connection pooling}: reusing a set of open database connections across requests instead of opening a new one per request.
+  \item \textbf{Prepared statement / parameterized query}: SQL with placeholders (\texttt{?}) bound to values separately from the query text -- the standard SQL-injection defense.
+  \item \textbf{X DevAPI}: MySQL's NoSQL-style document-store API, letting JSON columns be queried collection-style rather than purely relationally.
+\end{tightlist}
+
+\vspace{1em}
+\noindent\textit{Last check before walking in: can each of the three of us explain Section~4 (why the supertype/subtype design) and Section~5 (why each trigger/procedure exists) in our own words, not just read it off this page? That's the part most likely to get a direct follow-up question.}
+
+\end{document}

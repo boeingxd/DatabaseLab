@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 11 – Routines, Triggers &amp; JSON</title>
+<style>
+  :root { --teal:#1E8A82; --navy:#1F3864; --red:#D9534F; --amber:#E0A800; --bg:#F5F7FA; --line:#DADFE6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:#1C1C1C; }
+  header { background:var(--navy); color:#fff; padding:14px 24px; }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:4px 0 0; opacity:.8; font-size:13px; }
+  main { display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 24px; max-width:1200px; margin:auto; }
+  section { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px; min-width:0; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { margin:0 0 10px; font-size:16px; color:var(--navy); }
+  h2 .ex { font-size:12px; font-weight:600; color:var(--teal); margin-left:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#EEF2F7; color:var(--navy); }
+  .seats { font-weight:700; }
+  .full { color:var(--red); }
+  .neg { color:#fff; background:var(--red); padding:1px 6px; border-radius:4px; }
+  .muted { color:#999; }
+  .tag { display:inline-block; background:#EAF5F4; color:var(--teal); border-radius:10px; padding:0 8px; margin:1px 2px 1px 0; font-size:12px; }
+  label { font-size:13px; color:#555; display:block; margin:6px 0 2px; }
+  select, input { width:100%; padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; }
+  .row { display:flex; gap:8px; align-items:end; }
+  .row > div { flex:1; min-width:0; }
+  button { background:var(--teal); color:#fff; border:0; border-radius:6px; padding:8px 14px; font-size:14px; cursor:pointer; white-space:nowrap; }
+  button:hover { filter:brightness(1.08); }
+  button.danger { background:var(--red); }
+  button.ghost { background:#fff; color:var(--navy); border:1px solid var(--line); }
+  button.small { padding:4px 10px; font-size:13px; }
+  .hint { font-size:12px; color:#666; margin-top:8px; }
+  .warn { font-size:13px; color:#8a6d00; background:#FFF6D6; border:1px solid #F2E2A6; border-radius:6px; padding:6px 10px; margin:8px 0 0; }
+  .warn:empty { display:none; }
+  #log { font-family: "Courier New", monospace; font-size:13px; max-height:280px; overflow:auto; margin:0; padding:0; list-style:none; }
+  #log li { padding:4px 6px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+  #log li.note { color:var(--navy); background:#F7F9FC; }
+  .s2 { color:var(--teal); } .s4 { color:var(--amber); } .s5 { color:var(--red); }
+  .badge { display:inline-block; min-width:38px; text-align:center; font-weight:700; }
+  .review { border-bottom:1px solid var(--line); padding:6px 0; font-size:14px; }
+  .stars { color:var(--amber); letter-spacing:1px; }
+  .scroll { overflow-x:auto; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; padding:12px; } .row { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CSS326 Lab 11 – Stored Routines, Triggers &amp; JSON</h1>
+  <p>University front-end for Exercises 2–5. Every panel calls the Express API; the log shows each request and response.</p>
+</header>
+
+<main>
+  <!-- Courses: seats (triggers) + JSON details -->
+  <section class="wide">
+    <h2>Courses <span class="ex">seats: Ex 2 &amp; 3 · details: Ex 4</span></h2>
+    <div class="row" style="max-width:360px">
+      <div><label for="dayFilter">Filter by day (a JSON field)</label>
+        <select id="dayFilter">
+          <option value="">All days</option>
+          <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+        </select></div>
+    </div>
+    <div class="scroll">
+    <table style="margin-top:8px">
+      <thead><tr><th>ID</th><th>Title</th><th>Credit</th><th>Free seats</th><th>Room</th><th>Day / time</th><th>Tags</th></tr></thead>
+      <tbody id="courses"></tbody>
+    </table>
+    </div>
+    <p class="warn" id="courseWarn"></p>
+    <p class="hint">Seats and details come from <code>GET /courses</code> (or <code>GET /courses?day=Mon</code>). Room, day and tags are read out of the <code>details</code> JSON column with <code>-&gt;&gt;</code> and <code>-&gt;</code>.</p>
+  </section>
+
+  <!-- Students: stored function -->
+  <section>
+    <h2>Students <span class="ex">course count: Ex 3</span></h2>
+    <div class="scroll" style="max-height:330px; overflow-y:auto">
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Major</th><th>Courses</th></tr></thead>
+      <tbody id="students"></tbody>
+    </table>
+    </div>
+    <p class="warn" id="studentWarn"></p>
+    <p class="hint">The Courses column is <code>course_count(Id)</code>, your stored function, called inside the SELECT of <code>GET /students</code>.</p>
+  </section>
+
+  <!-- Enrol / cancel: procedure + triggers -->
+  <section>
+    <h2>Enrol / cancel <span class="ex">Ex 2 &amp; 3</span></h2>
+    <div class="row">
+      <div><label for="student">Student</label><select id="student"></select></div>
+      <div><label for="course">Course</label><select id="course"></select></div>
+      <div style="flex:0 0 auto"><button id="enrolBtn">Enrol</button></div>
+    </div>
+    <label style="margin-top:12px">This student's enrolments</label>
+    <table>
+      <thead><tr><th>Course</th><th>Title</th><th>Grade</th><th></th></tr></thead>
+      <tbody id="enrolments"></tbody>
+    </table>
+    <p class="hint">Enrol calls <code>POST /students/:id/enrolments</code>; Cancel calls <code>DELETE /students/:id/enrolments/:courseId</code>.
+      After each one the log shows how the course's free seats changed: it should be exactly <b>−1</b> or <b>+1</b>.</p>
+  </section>
+
+  <!-- Reviews: document store -->
+  <section>
+    <h2>Course reviews <span class="ex">document store: Ex 5 (if time)</span></h2>
+    <div class="row">
+      <div><label for="revCourse">Course</label><select id="revCourse"></select></div>
+      <div style="flex:0 0 auto"><button class="ghost" id="revLoad">Load reviews</button></div>
+    </div>
+    <div id="reviews" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="revStudent">Your name</label><input id="revStudent" placeholder="Ploy"></div>
+      <div style="flex:0 0 90px"><label for="revStars">Stars</label>
+        <select id="revStars"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></div>
+    </div>
+    <label for="revComment">Comment</label><input id="revComment" placeholder="Great labs!">
+    <label for="revTags">Tags (optional, comma separated)</label><input id="revTags" placeholder="labs, projects">
+    <div style="margin-top:8px"><button id="revAdd">Add review</button></div>
+    <p class="hint">Reviews are JSON documents in a <b>collection</b>, stored with the X DevAPI (<code>add()</code> / <code>find()</code>), not in a table.</p>
+  </section>
+
+  <!-- Response log -->
+  <section>
+    <h2>Responses <button class="ghost small" id="clearLog" style="float:right">Clear</button></h2>
+    <ul id="log"></ul>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let students = [];
+let courses = [];
+
+// ---- helpers ------------------------------------------------------------
+async function api(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  return { status: res.status, data };
+}
+
+function log(method, url, status, data) {
+  const li = document.createElement('li');
+  const cls = status < 300 ? 's2' : status < 500 ? 's4' : 's5';
+  li.innerHTML = `<span class="badge ${cls}">${status}</span> ${method} ${escapeHtml(url)} &rarr; ${escapeHtml(JSON.stringify(data))}`;
+  $('log').prepend(li);
+}
+
+function note(html) {
+  const li = document.createElement('li');
+  li.className = 'note';
+  li.innerHTML = html;
+  $('log').prepend(li);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+// tags may arrive as a parsed array or as a JSON string - accept both
+function toTags(t) {
+  if (Array.isArray(t)) return t;
+  if (typeof t === 'string') { try { const v = JSON.parse(t); return Array.isArray(v) ? v : []; } catch { return []; } }
+  return [];
+}
+
+// seats of one course, read fresh from the API (ignores the day filter)
+async function seatsOf(courseId) {
+  const { status, data } = await api('GET', '/courses');
+  if (status !== 200) return undefined;
+  return data.find((c) => c.id === courseId)?.seats;
+}
+
+function seatNote(courseId, before, after, expected) {
+  if (before === undefined || after === undefined) return;
+  const diff = after - before;
+  const sign = diff > 0 ? '+' : '';
+  let verdict = '';
+  if (diff === expected) verdict = ' &#10004;';
+  else if (diff !== 0) verdict = ` <span class="neg">expected ${expected > 0 ? '+' : ''}${expected} – are the seats being changed twice?</span>`;
+  note(`Course ${courseId} free seats: ${before} &rarr; <b>${after}</b> (${sign}${diff})${verdict}`);
+}
+
+// ---- loaders ------------------------------------------------------------
+async function loadCourses() {
+  const day = $('dayFilter').value;
+  const url = day ? `/courses?day=${encodeURIComponent(day)}` : '/courses';
+  const { status, data } = await api('GET', url);
+  if (status !== 200) { log('GET', url, status, data); return; }
+  const hasDetails = data.length > 0 && 'room' in data[0];
+  $('courseWarn').textContent = hasDetails ? ''
+    : 'Room, day and tags are empty until you add the details JSON column (Exercise 4) and read it in controllers/courseController.js.';
+  if (day && data.some((c) => c.day !== undefined && c.day !== day)) {
+    $('courseWarn').textContent = 'The day filter is not applied yet – add the WHERE on the JSON field in controllers/courseController.js (Exercise 4).';
+  }
+  $('courses').innerHTML = data.length === 0
+    ? '<tr><td colspan="7" class="hint">No courses match this filter</td></tr>'
+    : data.map((c) => {
+      const s = c.seats;
+      const cls = s < 0 ? 'neg' : s === 0 ? 'full' : '';
+      const tags = toTags(c.tags).map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join('');
+      const dash = '<span class="muted">–</span>';
+      return `<tr><td>${c.id}</td><td>${escapeHtml(c.title)}</td><td>${c.credit ?? ''}</td>
+        <td class="seats"><span class="${cls}">${s}</span>${s === 0 ? ' (full)' : ''}</td>
+        <td>${c.room ? escapeHtml(c.room) : dash}</td>
+        <td>${c.day ? escapeHtml(c.day + (c.time ? ' ' + c.time : '')) : dash}</td>
+        <td>${tags || dash}</td></tr>`;
+    }).join('');
+  if (!day) {                                    // keep the drop-downs complete
+    courses = data;
+    for (const sel of ['course', 'revCourse']) {
+      const keep = $(sel).value;
+      $(sel).innerHTML = courses.map((c) => `<option value="${c.id}">${c.id} – ${escapeHtml(c.title)}</option>`).join('');
+      if (keep) $(sel).value = keep;
+    }
+  }
+}
+
+async function loadStudents() {
+  const { status, data } = await api('GET', '/students');
+  if (status !== 200) { log('GET', '/students', status, data); $('studentWarn').textContent = data.error || ''; return; }
+  students = data;
+  const hasCount = data.length > 0 && 'courses' in data[0];
+  $('studentWarn').textContent = hasCount ? ''
+    : 'The Courses column is empty until you call course_count(Id) in controllers/studentController.js (Exercise 3).';
+  $('students').innerHTML = students.map((s) => `<tr><td>${s.id}</td><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.major ?? '')}</td>
+      <td>${s.courses ?? '<span class="muted">–</span>'}</td></tr>`).join('');
+  const keep = $('student').value;
+  $('student').innerHTML = students.map((s) => `<option value="${s.id}">${s.id} – ${escapeHtml(s.name)}</option>`).join('');
+  if (keep) $('student').value = keep;
+}
+
+async function loadEnrolments() {
+  const sid = $('student').value;
+  if (!sid) return;
+  const { status, data } = await api('GET', `/students/${sid}/enrolments`);
+  if (status !== 200) { log('GET', `/students/${sid}/enrolments`, status, data); return; }
+  $('enrolments').innerHTML = data.length === 0
+    ? '<tr><td colspan="4" class="hint">No enrolments</td></tr>'
+    : data.map((e) => `<tr><td>${e.course_id}</td><td>${escapeHtml(e.title)}</td><td>${e.grade ?? ''}</td>
+        <td><button class="danger small" data-course="${e.course_id}">Cancel</button></td></tr>`).join('');
+}
+
+async function refresh() {
+  await loadCourses();
+  await loadStudents();
+  await loadEnrolments();
+}
+
+// ---- Enrol (procedure + insert trigger) -------------------------------------
+$('enrolBtn').addEventListener('click', async () => {
+  const sid = $('student').value;
+  const cid = Number($('course').value);
+  const before = await seatsOf(cid);
+  const url = `/students/${sid}/enrolments`;
+  const { status, data } = await api('POST', url, { course_id: cid });
+  log('POST', `${url} {course_id:${cid}}`, status, data);
+  const after = await seatsOf(cid);
+  seatNote(cid, before, after, status === 201 ? -1 : 0);
+  refresh();
+});
+
+// ---- Cancel (delete trigger) ------------------------------------------------
+$('enrolments').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-course]');
+  if (!btn) return;
+  const sid = $('student').value;
+  const cid = Number(btn.dataset.course);
+  const before = await seatsOf(cid);
+  const url = `/students/${sid}/enrolments/${cid}`;
+  const { status, data } = await api('DELETE', url);
+  log('DELETE', url, status, data);
+  const after = await seatsOf(cid);
+  seatNote(cid, before, after, status === 200 ? 1 : 0);
+  refresh();
+});
+
+// ---- Reviews (document store) ----------------------------------------------
+async function loadReviews() {
+  const cid = $('revCourse').value;
+  const url = `/courses/${cid}/reviews`;
+  const { status, data } = await api('GET', url);
+  if (status !== 200) {
+    log('GET', url, status, data);
+    $('reviews').innerHTML = `<p class="warn">${escapeHtml(data.error || 'not available')}</p>`;
+    return;
+  }
+  $('reviews').innerHTML = data.length === 0
+    ? '<p class="hint">No reviews for this course yet.</p>'
+    : data.map((r) => `<div class="review"><span class="stars">${'&#9733;'.repeat(r.stars || 0)}</span>
+        <b>${escapeHtml(r.student || '')}</b> ${escapeHtml(r.comment || '')}
+        ${toTags(r.tags).map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>`).join('');
+}
+
+$('revLoad').addEventListener('click', loadReviews);
+$('revCourse').addEventListener('change', loadReviews);
+$('revAdd').addEventListener('click', async () => {
+  const cid = $('revCourse').value;
+  const tags = $('revTags').value.split(',').map((t) => t.trim()).filter(Boolean);
+  const body = { student: $('revStudent').value.trim(), stars: Number($('revStars').value), comment: $('revComment').value.trim() };
+  if (tags.length) body.tags = tags;
+  const url = `/courses/${cid}/reviews`;
+  const { status, data } = await api('POST', url, body);
+  log('POST', url, status, data);
+  if (status === 201) { $('revComment').value = ''; $('revTags').value = ''; }
+  loadReviews();
+});
+
+$('dayFilter').addEventListener('change', loadCourses);
+$('student').addEventListener('change', loadEnrolments);
+$('clearLog').addEventListener('click', () => { $('log').innerHTML = ''; });
+
+// ---- start -----------------------------------------------------------------
+(async () => {
+  await loadCourses();
+  await loadStudents();
+  await loadEnrolments();
+})();
+</script>
+</body>
+</html>

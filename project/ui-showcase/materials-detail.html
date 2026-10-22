@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full course cheat sheet — CSC201 — SIIT Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav__inner">
+    <a href="dashboard.html" class="brand">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/><path d="M3 13.5l7 3.5 7-3.5"/></svg>
+      SIIT Study Hub
+    </a>
+    <nav class="navlinks" aria-label="Primary">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="catalogue.html" aria-current="page">Courses</a>
+    </nav>
+    <div class="nav-right">
+      <div class="avatar" title="Touch-ing Yinyong">TY</div>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+  <div class="page-head" style="padding-bottom:var(--sp-4);">
+    <div class="breadcrumb">
+      <a href="course.html">CSC201</a>
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+      <span>Materials</span>
+    </div>
+    <div class="flex gap-2 mb-2">
+      <span class="badge">cheat_sheet</span>
+      <span class="badge badge--program">CSC201</span>
+    </div>
+    <h1>Full course cheat sheet</h1>
+    <p class="page-sub">Posted by anon_handle_11 · Semester 2025/2, Dr. B</p>
+  </div>
+
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <p class="section-title">Notes</p>
+      <div class="card card-pad prose mb-6">
+        <h3>Sorting</h3>
+        <ul>
+          <li>Quicksort: avg O(n log n), worst O(n²) — watch the pivot choice question, always comes up</li>
+          <li>Mergesort: stable, O(n log n) always, needs O(n) extra space</li>
+          <li>Heapsort: in-place, O(n log n), not stable</li>
+        </ul>
+        <h3>Recursion</h3>
+        <ul>
+          <li>Always define the base case first, then the recursive case</li>
+          <li>Trace with a small input by hand before trusting the code — this is literally how 3/5 exam questions are graded</li>
+          <li>Tail recursion doesn't get optimized in most of what we cover — don't assume it's free</li>
+        </ul>
+        <h3>Joins</h3>
+        <ul>
+          <li>INNER vs LEFT — draw the Venn diagram if you blank on this mid-exam</li>
+          <li>Know the CourseOffering example from lecture cold, it's the running example on every quiz</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <p class="section-title">Attachment</p>
+      <div class="attachment mb-6">
+        <div class="attachment__icon"><svg class="icon" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg></div>
+        <div style="flex:1;">
+          <div class="attachment__name">css326_cheatsheet_v3.pdf</div>
+          <a href="#" class="link-btn attachment__link">Download <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 3v10M6 9l4 4 4-4M4 16h12"/></svg></a>
+        </div>
+      </div>
+
+      <p class="section-title">Actions</p>
+      <div class="card card-pad flex-between flex-wrap gap-4">
+        <div class="vote">
+          <button type="button" data-vote="up" aria-pressed="false" aria-label="Upvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V5M5 9l5-5 5 5"/></svg></button>
+          <span class="vote__score">27</span>
+          <button type="button" data-vote="down" aria-pressed="false" aria-label="Downvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 5v10M5 11l5 5 5-5"/></svg></button>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" data-open-report data-report-title="Full course cheat sheet">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3v14M5 3h9l-2.5 3L14 9H5"/></svg>
+          Report
+        </button>
+      </div>
+      <div class="flex gap-4 mt-3">
+        <button type="button" class="link-btn" style="color:var(--ink-muted);">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M13 3l4 4-9 9H4v-4l9-9z"/></svg>
+          Edit
+        </button>
+        <button type="button" class="link-btn" style="color:var(--danger);">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg>
+          Delete
+        </button>
+        <span class="text-xs faint" style="align-self:center;">Visible to the author only</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="report-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="report-target-title">
+  <div class="modal">
+    <form>
+      <div class="modal__head">
+        <div>
+          <p class="text-xs muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:700;">Report submission</p>
+          <h2 id="report-target-title" style="font-size:18px;margin-top:4px;">this submission</h2>
+        </div>
+        <button type="button" class="modal__close" data-close-report aria-label="Close">
+          <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="text-sm muted mb-4">This only inserts a Report row for a moderator to review — it does not take the content down. A moderator later calls <span class="mono">sp_moderate_content(...)</span> to act on it.</p>
+        <div class="field">
+          <label>Reason</label>
+          <div class="pillgroup" data-pillgroup>
+            <button type="button" class="pill" aria-pressed="true">Looks like an exam paper</button>
+            <button type="button" class="pill" aria-pressed="false">Academic integrity</button>
+            <button type="button" class="pill" aria-pressed="false">Spam / not useful</button>
+            <button type="button" class="pill" aria-pressed="false">Other</button>
+          </div>
+        </div>
+        <div class="field mb-0">
+          <label for="report-detail">Additional detail (optional)</label>
+          <textarea class="textarea" id="report-detail" rows="3" placeholder="e.g. this is the actual answer key, not a summary"></textarea>
+        </div>
+        <div class="modal__foot">
+          <button type="button" class="btn btn-secondary" data-close-report>Cancel</button>
+          <button type="submit" class="btn btn-danger">Submit report</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

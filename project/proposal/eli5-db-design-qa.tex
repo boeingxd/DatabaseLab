@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\definecolor{inkc}{RGB}{22,35,44}
+\definecolor{accentc}{RGB}{18,64,71}
+\definecolor{mutedc}{RGB}{82,104,114}
+\definecolor{rulec}{RGB}{209,218,220}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accentc,
+  urlcolor=accentc,
+  citecolor=accentc,
+  pdftitle={SIIT Study Hub -- ELI5 DB Design \& Procedures Q\&A},
+  pdfauthor={Touch-ing Yinyong}
+}
+
+\titleformat{\section}{\large\bfseries\color{accentc}}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\color{mutedc} SIIT Study Hub -- DB Design Q\&A (ELI5)}
+\fancyhead[R]{\small\color{mutedc} CSS326 Week 7}
+\fancyfoot[C]{\small\color{mutedc} \thepage}
+
+\newcommand{\qa}[3]{%
+  \par\medskip\noindent{\large\color{accentc}\textbf{``#1''}}\par\smallskip
+  \noindent\textbf{ELI5:} #2\par
+  \ifx&#3&\else\smallskip\noindent\textbf{If pushed further:} #3\par\fi
+  \par\noindent{\color{rulec}\hrulefill}
+}
+
+\title{\color{accentc}\textbf{SIIT Study Hub}\\[0.2em]\Large Database Design \& Procedures --- ELI5 Q\&A Cheat Sheet\\[0.3em]\normalsize\color{mutedc} CSS326 Database Programming Laboratory --- Week 7 Proposal}
+\author{Touch-ing Yinyong}
+\date{Quick-reference for live presentation Q\&A}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\noindent\textbf{How to use this.} These are plain-English answers to the ``why did you do it this way'' questions an audience is most likely to ask. Say the ELI5 line first. Only reach for the second line if someone pushes back or asks a follow-up.
+
+% =========================================================
+\section{Security}
+
+\qa{Why salt AND hash the password?}
+{Hashing scrambles the password into gibberish that can't be reversed --- even we can't see it. But if two students both use ``password123'', plain hashing gives them the \emph{identical} gibberish, so an attacker with a precomputed lookup table (a rainbow table) cracks both instantly. Salt is a random extra ingredient mixed in per user before hashing, so the same password produces different gibberish for everyone. Hash scrambles it, salt makes every scramble unique.}
+{The salt is stored per-row in \texttt{VARBINARY}, and only \texttt{sp\_register\_user} is allowed to set \texttt{password\_hash} --- so the raw password never touches application code or logs.}
+
+% =========================================================
+\section{Why so much ``advanced'' design already?}
+
+\qa{Why so many advanced features (procedures, triggers, transactions) right now, at proposal stage?}
+{We didn't add these to look impressive --- each one is the direct fix for a specific, real problem, and each one lines up with exactly the week CSS326 teaches that concept.}
+{We're not building ahead of the syllabus, we mapped our design onto it: procedures land Week 10, triggers Week 11. Right now we're showing we understand \emph{why} each piece is needed before we write a line of SQL.}
+
+% =========================================================
+\section{Schema Design}
+
+\qa{What is CourseOffering, and why do we need it?}
+{``CSS326'' is the course. But CSS326 gets taught over and over --- different semester, sometimes a different instructor. CourseOffering is one specific instance of that: ``CSS326, taught by Dr.\ A, in 2026/1.'' Without it, every submission would have to re-type the instructor and semester as plain text, and fixing one typo wouldn't fix the other fifty rows that have it too.}
+{It's the difference between writing the teacher's name on every homework page versus writing it once on the syllabus and pointing to it.}
+
+\qa{What level of normalization is this?}
+{Third normal form (3NF) --- every non-key column depends on the whole primary key and nothing else.}
+{The clearest example is CourseOffering itself: in an earlier prototype, instructor and semester were transitively dependent on the course but stored as duplicated free text anyway. Pulling them into their own table with their own key is the textbook 3NF fix. (1NF is satisfied because every field holds one atomic value, not a comma-jammed list; 2NF isn't really at stake since we don't use composite primary keys.)}
+
+\qa{Why split Content into ExamIntel and Materials instead of one big table?}
+{If everything lived in one table, every row would need columns for both ``exam duration'' \emph{and} ``markdown notes,'' half of them blank depending on the type. Content holds what's shared --- who posted it, which course, the attachment. ExamIntel and Materials each hold only their own fields. One post is always exactly one or the other, never both, never neither.}
+{}
+
+\qa{Why do Vote and Report point at Content instead of at ExamIntel or Materials directly?}
+{A vote or a report needs to work on either type of post. Pointing both at the shared parent (Content) means one clean connection instead of two connections that are half the time empty.}
+{}
+
+% =========================================================
+\section{Procedures, Triggers \& Transactions}
+
+\qa{Why use a trigger or procedure instead of just writing the rule in the app code?}
+{App code can be skipped --- a bug, a second app, someone hitting the database directly. A rule inside the database can't be bypassed no matter who's writing the data.}
+{Example: \texttt{trg\_enforce\_siit\_domain} re-checks the email domain even though the app already checks it client-side. That's on purpose --- it's the difference between ``please don't'' and ``physically can't.''}
+
+\qa{Why does sp\_submit\_content need to be a transaction?}
+{Submitting one post is really two inserts --- one into Content, one into its subtype. If the server crashed between those two inserts, you'd get a broken half-post with no actual content. A transaction says: do both, or undo both, never leave it half-done.}
+{}
+
+\qa{Why JSON columns for format/topics instead of more tables?}
+{A topic list (``recursion, sorting'') is open-ended --- could be one topic or ten. A whole separate table with joins is overkill for what it's used for here. JSON stores the list directly in the row, and it's the same idea the course itself introduces in Week 12.}
+{}
+
+\qa{Why ENUM for content\_type / exam\_type?}
+{These only ever have a few fixed, known options --- there's no scenario where content\_type is anything other than ``exam\_intel'' or ``materials.'' ENUM tells the database ``only allow these values,'' so a typo gets rejected automatically instead of silently corrupting data.}
+{}
+
+\qa{Why soft-delete instead of actually deleting reported content?}
+{A real delete is gone forever, no undo, no record. Soft-delete (\texttt{removed\_at}, \texttt{removed\_by}) lets a moderator restore a wrongly-removed post, and leaves a paper trail of who took it down and why --- important for something a student might dispute.}
+{}
+
+\end{document}

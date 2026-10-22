@@ -1,0 +1,13 @@
+{
+  "name": "assignment6-starter",
+  "version": "1.0.0",
+  "description": "CSS326 Lab Assignment 6 - Structuring a Web App (bookstore, starter)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.10.0"
+  }
+}

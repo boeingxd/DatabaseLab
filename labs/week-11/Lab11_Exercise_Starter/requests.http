@@ -1,0 +1,43 @@
+### Lab 11 test requests (VS Code "REST Client" extension, or copy into Postman)
+
+### Courses with free seats (and, after Exercise 4, room / day / tags)
+GET http://localhost:3000/courses
+
+### Exercise 4 - filter on a JSON field
+GET http://localhost:3000/courses?day=Mon
+
+### Exercise 3 - students with their course count (stored function)
+GET http://localhost:3000/students
+
+### A student's enrolments
+GET http://localhost:3000/students/9/enrolments
+
+### Exercise 3 - enrol student 9 in course 3 (CALL enrol_student + trigger)
+POST http://localhost:3000/students/9/enrolments
+Content-Type: application/json
+
+{ "course_id": 3 }
+
+### Exercise 3 - cancel it (the delete trigger gives the seat back)
+DELETE http://localhost:3000/students/9/enrolments/3
+
+### Exercise 3 - duplicate enrolment: student 1 is already in course 1 (expect 409)
+POST http://localhost:3000/students/1/enrolments
+Content-Type: application/json
+
+{ "course_id": 1 }
+
+### Exercise 2/3 - a full course (first run: UPDATE courses SET seats = 0 WHERE id = 5;) -> 409 course is full
+POST http://localhost:3000/students/9/enrolments
+Content-Type: application/json
+
+{ "course_id": 5 }
+
+### Exercise 5 (if time) - reviews in the document store
+GET http://localhost:3000/courses/1/reviews
+
+###
+POST http://localhost:3000/courses/1/reviews
+Content-Type: application/json
+
+{ "student": "Ploy", "stars": 5, "comment": "Great labs", "tags": ["labs", "sql"] }

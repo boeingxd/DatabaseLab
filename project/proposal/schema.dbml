@@ -1,0 +1,132 @@
+// SIIT Study Hub — CSS326 course-project schema
+// Paste this directly into the dbdiagram.io editor.
+
+enum content_type_enum {
+  exam_intel
+  materials
+}
+
+enum exam_type_enum {
+  midterm
+  final
+  quiz
+}
+
+enum allowed_aids_enum {
+  none
+  one_sheet
+  open_book
+  calculator
+}
+
+enum materials_type_enum {
+  summary
+  cheat_sheet
+  notes
+  worked_problems
+}
+
+Table users {
+  id integer [primary key]
+  siit_email varchar(255) [not null, unique, note: 'institutional email, domain-verified']
+  handle varchar(32) [not null, unique, note: 'public display name']
+  real_name varchar(100) [note: 'private — shown only if credited']
+  password_hash varchar(255) [not null]
+  salt varbinary(32) [not null]
+  program varchar(50)
+  year int [note: '1-8']
+  is_admin boolean [not null, default: false]
+  created_at datetime [not null, default: `now()`]
+}
+
+Table courses {
+  id integer [primary key]
+  code varchar(10) [not null, unique]
+  title varchar(150) [not null]
+  program varchar(50)
+  credits int [note: '1-6']
+}
+
+Table instructors {
+  id integer [primary key]
+  name varchar(100) [not null, unique]
+}
+
+Table course_offerings {
+  id integer [primary key]
+  course_id integer [not null]
+  instructor_id integer
+  semester varchar(10) [not null, note: 'e.g. 2026/1']
+}
+
+// Supertype — disjoint, total: every row is exactly one of exam_intel / materials.
+Table content {
+  id integer [primary key]
+  offering_id integer [not null]
+  author_id integer [not null]
+  content_type content_type_enum [not null]
+  file_path varchar(255) [note: 'optional attachment (PDF/image/text), shared by both subtypes']
+  credit_by_name boolean [not null, default: false]
+  removed_at datetime
+  removed_by integer
+  removed_note varchar(255)
+  created_at datetime [not null, default: `now()`]
+}
+
+// Subtype of content — content_id is both this table's PK and its FK to content.
+Table exam_intel {
+  content_id integer [primary key, note: 'PK/FK -> content.id']
+  exam_type exam_type_enum [not null]
+  format varchar [not null, note: 'JSON array, e.g. ["MCQ","Written"]']
+  topics varchar [not null, note: 'JSON array, e.g. ["recursion","sorting"]']
+  allowed_aids allowed_aids_enum
+  duration_min int [note: '> 0, minutes']
+  time_pressure int [not null, note: '1-5']
+  difficulty int [not null, note: '1-5']
+  advice text
+}
+
+// Subtype of content — content_id is both this table's PK and its FK to content.
+Table materials {
+  content_id integer [primary key, note: 'PK/FK -> content.id']
+  title varchar(150) [not null]
+  type materials_type_enum [not null]
+  body_md text [note: 'required unless content.file_path is set — checked in sp_submit_content']
+}
+
+Table votes {
+  id integer [primary key]
+  content_id integer [not null]
+  user_id integer [not null]
+  value int [not null, note: '-1 or 1']
+  created_at datetime [not null, default: `now()`]
+}
+
+Table reports {
+  id integer [primary key]
+  content_id integer [not null]
+  reporter_id integer [not null]
+  reason varchar(255) [not null]
+  resolved boolean [not null, default: false]
+  resolved_at datetime
+  resolved_by integer
+  created_at datetime [not null, default: `now()`]
+}
+
+Ref: course_offerings.course_id > courses.id
+Ref: course_offerings.instructor_id > instructors.id
+
+Ref: content.offering_id > course_offerings.id
+Ref: content.author_id > users.id
+Ref: content.removed_by > users.id
+
+// Subtype relationships — one-to-one, since content_id is shared as PK.
+Ref: exam_intel.content_id - content.id
+Ref: materials.content_id - content.id
+
+Ref: votes.content_id > content.id
+Ref: votes.user_id > users.id
+
+Ref: reports.content_id > content.id
+Ref: reports.reporter_id > users.id
+Ref: reports.resolved_by > users.id

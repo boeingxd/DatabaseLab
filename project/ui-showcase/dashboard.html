@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — SIIT Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav__inner">
+    <a href="dashboard.html" class="brand">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/><path d="M3 13.5l7 3.5 7-3.5"/></svg>
+      SIIT Study Hub
+    </a>
+    <nav class="navlinks" aria-label="Primary">
+      <a href="dashboard.html" aria-current="page">Dashboard</a>
+      <a href="catalogue.html">Courses</a>
+      <a href="moderation.html">Moderation</a>
+    </nav>
+    <div class="nav-search">
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M17 17l-4-4"/></svg>
+      <input type="search" placeholder="Search courses… e.g. CSS326" aria-label="Search courses">
+    </div>
+    <div class="nav-right">
+      <div class="avatar" title="Touch-ing Yinyong">TY</div>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+  <div class="page-head">
+    <h1>Welcome back, Touch-ing</h1>
+    <p class="page-sub">Here's what's new since your last visit.</p>
+  </div>
+
+  <section class="mb-8">
+    <div class="flex-between mb-3">
+      <h2 class="section-title" style="margin-bottom:0;">Your courses</h2>
+      <a href="catalogue.html" class="link-btn">View all
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+      </a>
+    </div>
+    <div class="grid-3">
+      <a class="card card-pad" href="course.html" style="display:block;">
+        <div class="flex-between mb-2">
+          <span style="font-family:var(--font-serif);font-weight:600;font-size:16px;">CSS326</span>
+          <span class="badge badge--program">3 offerings</span>
+        </div>
+        <p class="text-sm muted">Database Programming Laboratory</p>
+      </a>
+      <a class="card card-pad" href="course.html" style="display:block;">
+        <div class="flex-between mb-2">
+          <span style="font-family:var(--font-serif);font-weight:600;font-size:16px;">CSC201</span>
+          <span class="badge badge--program">5 offerings</span>
+        </div>
+        <p class="text-sm muted">Data Structures and Algorithms</p>
+      </a>
+      <a class="card card-pad" href="course.html" style="display:block;">
+        <div class="flex-between mb-2">
+          <span style="font-family:var(--font-serif);font-weight:600;font-size:16px;">CSC310</span>
+          <span class="badge badge--program">2 offerings</span>
+        </div>
+        <p class="text-sm muted">Operating Systems</p>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="flex-between mb-3">
+      <h2 class="section-title" style="margin-bottom:0;">Recently active</h2>
+      <a href="catalogue.html" class="btn btn-primary btn-sm">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>
+        Submit new
+      </a>
+    </div>
+    <div class="list">
+      <a class="list-row" href="exam-detail.html">
+        <div class="list-row__thumb">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+        </div>
+        <div class="list-row__body">
+          <div class="list-row__title">Midterm format &amp; topics</div>
+          <div class="list-row__meta">
+            <span class="badge badge--exam">Exam Intel</span>
+            <span class="dot mono">CSS326</span>
+          </div>
+        </div>
+        <div class="flex gap-1 mono text-sm" style="color:var(--accent-strong);font-weight:600;">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V6M5 10l5-5 5 5"/></svg>12
+        </div>
+      </a>
+      <a class="list-row" href="materials-detail.html">
+        <div class="list-row__thumb">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+        </div>
+        <div class="list-row__body">
+          <div class="list-row__title">Full course cheat sheet</div>
+          <div class="list-row__meta">
+            <span class="badge badge--materials">Materials</span>
+            <span class="dot mono">CSC201</span>
+          </div>
+        </div>
+        <div class="flex gap-1 mono text-sm" style="color:var(--accent-strong);font-weight:600;">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V6M5 10l5-5 5 5"/></svg>27
+        </div>
+      </a>
+      <a class="list-row" href="exam-detail.html">
+        <div class="list-row__thumb">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+        </div>
+        <div class="list-row__body">
+          <div class="list-row__title">Final exam advice thread</div>
+          <div class="list-row__meta">
+            <span class="badge badge--exam">Exam Intel</span>
+            <span class="dot mono">CSC310</span>
+          </div>
+        </div>
+        <div class="flex gap-1 mono text-sm" style="color:var(--accent-strong);font-weight:600;">
+          <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V6M5 10l5-5 5 5"/></svg>8
+        </div>
+      </a>
+    </div>
+  </section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

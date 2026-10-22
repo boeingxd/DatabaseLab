@@ -1,0 +1,85 @@
+<svg viewBox="0 0 1120 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entity relationship diagram">
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="#7c8f97"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="660" fill="#ffffff"/>
+
+  <g stroke="#7c8f97" stroke-width="1.3" fill="none">
+    <path d="M230,70 L465,70"/>
+    <path d="M890,70 L655,70"/>
+    <path d="M560,100 L560,190"/>
+    <path d="M230,225 L450,232"/>
+    <path d="M560,275 L560,315"/>
+    <path d="M135,260 L125,400"/>
+    <path d="M210,425 L448,255" marker-end="url(#arrow)"/>
+    <path d="M225,260 L225,595 L210,595" marker-end="url(#arrow)"/>
+    <path d="M210,595 L340,595 L340,270 L448,270" marker-end="url(#arrow)"/>
+  </g>
+
+  <polygon points="560,315 520,352 600,352" fill="#ffffff" stroke="#16232c" stroke-width="1.4"/>
+  <path d="M520,352 L460,400" stroke="#7c8f97" stroke-width="1.3" fill="none"/>
+  <path d="M600,352 L700,400" stroke="#7c8f97" stroke-width="1.3" fill="none"/>
+  <text x="640" y="345" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#526872">ISA (disjoint, total)</text>
+
+  <g font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#124047">
+    <rect x="300" y="52" width="96" height="18" rx="4" fill="#ffffff"/>
+    <text x="305" y="65">Has (1:M)</text>
+    <rect x="722" y="52" width="112" height="18" rx="4" fill="#ffffff"/>
+    <text x="727" y="65">Teaches (1:M)</text>
+    <rect x="505" y="135" width="96" height="18" rx="4" fill="#ffffff"/>
+    <text x="510" y="148">Has (1:M)</text>
+    <rect x="290" y="212" width="112" height="18" rx="4" fill="#ffffff"/>
+    <text x="295" y="225">Authors (1:M)</text>
+    <rect x="60" y="320" width="100" height="18" rx="4" fill="#ffffff"/>
+    <text x="65" y="333">Casts (1:M)</text>
+    <rect x="215" y="378" width="130" height="18" rx="4" fill="#ffffff"/>
+    <text x="220" y="391">Targets (M:1)</text>
+    <rect x="232" y="418" width="100" height="18" rx="4" fill="#ffffff"/>
+    <text x="237" y="431">Files (1:M)</text>
+    <rect x="355" y="284" width="130" height="18" rx="4" fill="#ffffff"/>
+    <text x="360" y="297">Targets (M:1)</text>
+  </g>
+
+  <g font-family="IBM Plex Sans, Arial, sans-serif">
+    <rect x="40" y="40" width="190" height="60" rx="8" fill="#ffffff" stroke="#aebcbf" stroke-width="1.4"/>
+    <text x="135" y="65" text-anchor="middle" font-weight="600" font-size="14" fill="#16232c">Course</text>
+    <text x="135" y="83" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK course_id</text>
+
+    <rect x="465" y="40" width="190" height="60" rx="8" fill="#ffffff" stroke="#aebcbf" stroke-width="1.4"/>
+    <text x="560" y="65" text-anchor="middle" font-weight="600" font-size="14" fill="#16232c">CourseOffering</text>
+    <text x="560" y="83" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK offering_id</text>
+
+    <rect x="890" y="40" width="190" height="60" rx="8" fill="#ffffff" stroke="#aebcbf" stroke-width="1.4"/>
+    <text x="985" y="65" text-anchor="middle" font-weight="600" font-size="14" fill="#16232c">Instructor</text>
+    <text x="985" y="83" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK instructor_id</text>
+
+    <rect x="40" y="200" width="190" height="60" rx="8" fill="#ffffff" stroke="#aebcbf" stroke-width="1.4"/>
+    <text x="135" y="225" text-anchor="middle" font-weight="600" font-size="14" fill="#16232c">User</text>
+    <text x="135" y="243" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK user_id</text>
+
+    <rect x="448" y="192" width="224" height="86" rx="10" fill="none" stroke="#1f6f78" stroke-width="2.2"/>
+    <rect x="455" y="199" width="210" height="72" rx="7" fill="#dcedee" stroke="#1f6f78" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="560" y="225" text-anchor="middle" font-weight="600" font-size="14" fill="#124047">Content</text>
+    <text x="560" y="243" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK content_id</text>
+    <text x="560" y="258" text-anchor="middle" font-size="10.5" fill="#124047">supertype</text>
+
+    <rect x="360" y="400" width="200" height="66" rx="8" fill="#ffffff" stroke="#1f6f78" stroke-width="1.4"/>
+    <text x="460" y="425" text-anchor="middle" font-weight="600" font-size="13.5" fill="#16232c">ExamIntel</text>
+    <text x="460" y="443" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3d5a8a">PK/FK content_id</text>
+
+    <rect x="600" y="400" width="200" height="66" rx="8" fill="#ffffff" stroke="#1f6f78" stroke-width="1.4"/>
+    <text x="700" y="425" text-anchor="middle" font-weight="600" font-size="13.5" fill="#16232c">Materials</text>
+    <text x="700" y="443" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3d5a8a">PK/FK content_id</text>
+
+    <rect x="40" y="400" width="170" height="60" rx="8" fill="#ffffff" stroke="#aebcbf" stroke-width="1.4"/>
+    <text x="125" y="425" text-anchor="middle" font-weight="600" font-size="13.5" fill="#16232c">Vote</text>
+    <text x="125" y="443" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK vote_id</text>
+
+    <rect x="40" y="565" width="170" height="60" rx="8" fill="#ffffff" stroke="#aebcbf" stroke-width="1.4"/>
+    <text x="125" y="590" text-anchor="middle" font-weight="600" font-size="13.5" fill="#16232c">Report</text>
+    <text x="125" y="608" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#9a4a20">PK report_id</text>
+  </g>
+</svg>

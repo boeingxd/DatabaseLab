@@ -1,0 +1,52 @@
+/* public/style.css */
+/* This matches Lab Sheet 10.4 -- done for you. Exercise 4 invites you to
+   extend it further if you have time. */
+body {
+  font-family: Arial, sans-serif;
+  max-width: 480px;
+  margin: 40px auto;
+}
+
+#list {
+  list-style: none;
+  padding: 0;
+}
+
+#list li {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#form {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+#form input {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  font: inherit;
+  flex: 2;
+  min-width: 0;
+}
+
+#form input[name="year"] {
+  flex: 1;
+}
+
+button {
+  background: #1e8a82;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+#message {
+  color: #c00000;
+  font-size: 14px;
+}

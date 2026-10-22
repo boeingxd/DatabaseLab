@@ -1,0 +1,14 @@
+{
+  "name": "css326-lab9-assignment",
+  "version": "1.0.0",
+  "description": "CSS326 Lab Assignment 9 - Transactions (bookstore starter)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.11.0"
+  }
+}

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS326 — SIIT Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav__inner">
+    <a href="dashboard.html" class="brand">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/><path d="M3 13.5l7 3.5 7-3.5"/></svg>
+      SIIT Study Hub
+    </a>
+    <nav class="navlinks" aria-label="Primary">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="catalogue.html" aria-current="page">Courses</a>
+    </nav>
+    <div class="nav-right">
+      <div class="avatar" title="Touch-ing Yinyong">TY</div>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+  <div class="page-head" style="padding-bottom:var(--sp-4);">
+    <div class="breadcrumb">
+      <a href="catalogue.html">Course Catalogue</a>
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+      <span>CSS326</span>
+    </div>
+    <h1>CSS326</h1>
+    <p class="page-sub" style="font-size:16px;">Database Programming Laboratory</p>
+    <p class="page-sub" style="margin-top:2px;">Instructor: Dr. A · Semester 2026/1</p>
+    <button class="link-btn mt-3" id="scope-toggle" type="button" style="border:1px solid var(--rule-strong);border-radius:999px;padding:6px 14px;color:var(--ink-muted);">
+      Viewing: all semesters combined
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 8l5 5 5-5"/></svg>
+    </button>
+  </div>
+
+  <dl class="statrow mb-8">
+    <div class="stat">
+      <dt>Avg. difficulty</dt>
+      <dd>4.2<small>/5</small></dd>
+    </div>
+    <div class="stat">
+      <dt>Avg. time pressure</dt>
+      <dd>3.6<small>/5</small></dd>
+    </div>
+    <div class="stat">
+      <dt>Most-cited topic</dt>
+      <dd style="font-size:18px;">recursion</dd>
+    </div>
+  </dl>
+
+  <div class="flex-between flex-wrap gap-3 mb-1">
+    <div class="tabs" data-tabs style="border-bottom:none;margin-bottom:0;">
+      <button class="tab" aria-selected="true" data-tab-target="exam">Exam Intel</button>
+      <button class="tab" aria-selected="false" data-tab-target="materials">Materials</button>
+    </div>
+    <div class="flex gap-3">
+      <a href="submit-exam.html" class="btn btn-primary btn-sm">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>
+        Submit Exam Intel
+      </a>
+      <a href="submit-materials.html" class="link-btn">Submit Materials</a>
+    </div>
+  </div>
+  <hr class="divider" style="margin-top:0;margin-bottom:var(--sp-5);">
+
+  <div data-tabs-scope>
+  <div class="list" data-tabpanel="exam">
+    <div class="list-row">
+      <div class="list-row__thumb">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+      </div>
+      <div class="list-row__body">
+        <a href="exam-detail.html" class="list-row__title" style="display:block;">Midterm 2025 — format &amp; topic breakdown</a>
+        <div class="list-row__meta">
+          <span class="badge">midterm</span>
+          <span class="dot">Difficulty 4/5</span>
+        </div>
+      </div>
+      <div class="vote">
+        <button type="button" data-vote="up" aria-pressed="false" aria-label="Upvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V5M5 9l5-5 5 5"/></svg></button>
+        <span class="vote__score">24</span>
+        <button type="button" data-vote="down" aria-pressed="false" aria-label="Downvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 5v10M5 11l5 5 5-5"/></svg></button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" data-open-report data-report-title="Midterm 2025 — format & topic breakdown">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3v14M5 3h9l-2.5 3L14 9H5"/></svg>
+        Report
+      </button>
+    </div>
+    <div class="list-row">
+      <div class="list-row__thumb">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+      </div>
+      <div class="list-row__body">
+        <a href="exam-detail.html" class="list-row__title" style="display:block;">Final exam — open book, calculator allowed</a>
+        <div class="list-row__meta">
+          <span class="badge">final</span>
+          <span class="dot">Difficulty 5/5</span>
+        </div>
+      </div>
+      <div class="vote">
+        <button type="button" data-vote="up" aria-pressed="false" aria-label="Upvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V5M5 9l5-5 5 5"/></svg></button>
+        <span class="vote__score">18</span>
+        <button type="button" data-vote="down" aria-pressed="false" aria-label="Downvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 5v10M5 11l5 5 5-5"/></svg></button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" data-open-report data-report-title="Final exam — open book, calculator allowed">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3v14M5 3h9l-2.5 3L14 9H5"/></svg>
+        Report
+      </button>
+    </div>
+    <div class="list-row">
+      <div class="list-row__thumb">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+      </div>
+      <div class="list-row__body">
+        <a href="exam-detail.html" class="list-row__title" style="display:block;">Quiz 3 recap — recursion heavy</a>
+        <div class="list-row__meta">
+          <span class="badge">quiz</span>
+          <span class="dot">Difficulty 3/5</span>
+        </div>
+      </div>
+      <div class="vote">
+        <button type="button" data-vote="up" aria-pressed="false" aria-label="Upvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V5M5 9l5-5 5 5"/></svg></button>
+        <span class="vote__score">9</span>
+        <button type="button" data-vote="down" aria-pressed="false" aria-label="Downvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 5v10M5 11l5 5 5-5"/></svg></button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" data-open-report data-report-title="Quiz 3 recap — recursion heavy">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3v14M5 3h9l-2.5 3L14 9H5"/></svg>
+        Report
+      </button>
+    </div>
+  </div>
+
+  <div class="list" data-tabpanel="materials" hidden>
+    <div class="list-row">
+      <div class="list-row__thumb">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v3h3"/></svg>
+      </div>
+      <div class="list-row__body">
+        <a href="materials-detail.html" class="list-row__title" style="display:block;">Recursion &amp; sorting — full topic summary</a>
+        <div class="list-row__meta">
+          <span class="badge">summary</span>
+        </div>
+      </div>
+      <div class="vote">
+        <button type="button" data-vote="up" aria-pressed="false" aria-label="Upvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 15V5M5 9l5-5 5 5"/></svg></button>
+        <span class="vote__score">15</span>
+        <button type="button" data-vote="down" aria-pressed="false" aria-label="Downvote"><svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 5v10M5 11l5 5 5-5"/></svg></button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" data-open-report data-report-title="Recursion & sorting — full topic summary">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M5 3v14M5 3h9l-2.5 3L14 9H5"/></svg>
+        Report
+      </button>
+    </div>
+  </div>
+  </div>
+
+  <p class="page-foot-note">
+    Report only inserts a Report row for a moderator to review — it does not take content down. Take-downs happen via <span class="mono">sp_moderate_content(...)</span> in the Moderation Queue.
+  </p>
+</main>
+
+<!-- Report overlay (shared modal — opens for any Report action on this page) -->
+<div class="overlay" id="report-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="report-target-title">
+  <div class="modal">
+    <form>
+      <div class="modal__head">
+        <div>
+          <p class="text-xs muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:700;">Report submission</p>
+          <h2 id="report-target-title" style="font-size:18px;margin-top:4px;">this submission</h2>
+        </div>
+        <button type="button" class="modal__close" data-close-report aria-label="Close">
+          <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="text-sm muted mb-4">This only inserts a Report row for a moderator to review — it does not take the content down. A moderator later calls <span class="mono">sp_moderate_content(...)</span> to act on it.</p>
+
+        <div class="field">
+          <label>Reason</label>
+          <div class="pillgroup" data-pillgroup>
+            <button type="button" class="pill" aria-pressed="true">Looks like an exam paper</button>
+            <button type="button" class="pill" aria-pressed="false">Academic integrity</button>
+            <button type="button" class="pill" aria-pressed="false">Spam / not useful</button>
+            <button type="button" class="pill" aria-pressed="false">Other</button>
+          </div>
+        </div>
+        <div class="field mb-0">
+          <label for="report-detail">Additional detail (optional)</label>
+          <textarea class="textarea" id="report-detail" rows="3" placeholder="e.g. page 3 matches the real 2024 final exam PDF"></textarea>
+        </div>
+        <div class="modal__foot">
+          <button type="button" class="btn btn-secondary" data-close-report>Cancel</button>
+          <button type="submit" class="btn btn-danger">Submit report</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  document.getElementById("scope-toggle").addEventListener("click", function () {
+    window.location.href = "offering.html";
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+### Lab 10 test requests (VS Code "REST Client" extension, or Postman)
+
+### Who is the app connected as? (Exercises 2 and 3)
+GET http://localhost:3000/api/whoami
+
+### Exercise 1 - the search, and its query plan
+GET http://localhost:3000/api/courses/search?title=Operating Systems
+
+###
+GET http://localhost:3000/api/courses/explain?title=Operating Systems
+
+###
+GET http://localhost:3000/api/courses/indexes
+
+### Exercise 3 - injection in the search (starter: every row; fixed: [])
+GET http://localhost:3000/api/courses/search?title=' OR '1'='1
+
+### Exercise 3 - a single quote (starter: raw SQL error; fixed: [])
+GET http://localhost:3000/api/courses/search?title='
+
+### Exercise 3 - injection in the id (starter: every enrolment; fixed: 400)
+GET http://localhost:3000/api/students/1 OR 1=1/courses
+
+### A normal lookup
+GET http://localhost:3000/api/students/1/courses

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moderation Queue — SIIT Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav__inner">
+    <a href="dashboard.html" class="brand">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/><path d="M3 13.5l7 3.5 7-3.5"/></svg>
+      SIIT Study Hub
+    </a>
+    <nav class="navlinks" aria-label="Primary">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="catalogue.html">Courses</a>
+    </nav>
+    <div class="nav-right">
+      <span class="badge-mod">
+        <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 2l7 3v5c0 4.5-3 7.5-7 8-4-.5-7-3.5-7-8V5l7-3z"/></svg>
+        Moderator
+      </span>
+      <div class="avatar" title="Touch-ing Yinyong">TY</div>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+  <div class="page-head">
+    <h1>Moderation queue</h1>
+    <p class="page-sub">Review reported content, take it down, or dismiss the report.</p>
+  </div>
+
+  <div class="tabs" data-tabs>
+    <button class="tab" aria-selected="true" data-tab-target="unresolved">Unresolved <span class="tab-count">3</span></button>
+    <button class="tab" aria-selected="false" data-tab-target="resolved">Resolved</button>
+  </div>
+
+  <div data-tabs-scope>
+  <div class="list" data-tabpanel="unresolved">
+    <table class="table">
+      <thead><tr><th>Content</th><th>Reporter</th><th>Reason</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td data-label="Content">
+            <div style="font-weight:600;">"Full practice exam PDF" — Exam Intel, CSS326</div>
+            <div class="db-note mt-2" style="display:inline-flex;">
+              <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/></svg>
+              sp_moderate_content(content_id, admin_id, remove, note) on Take Down
+            </div>
+          </td>
+          <td class="mono text-sm muted" data-label="Reporter">anon_handle_02</td>
+          <td class="text-sm" data-label="Reason">Looks like an actual exam paper</td>
+          <td data-label="Actions">
+            <div class="flex gap-2" style="justify-content:flex-end;">
+              <button type="button" class="btn btn-danger btn-sm" data-open-takedown data-item="&quot;Full practice exam PDF&quot; — Exam Intel, CSS326">Take down</button>
+              <button type="button" class="btn btn-secondary btn-sm">Dismiss</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td data-label="Content">
+            <div style="font-weight:600;">"Answer key to Quiz 2" — Materials, CSC201</div>
+            <div class="db-note mt-2" style="display:inline-flex;">
+              <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/></svg>
+              sp_moderate_content(content_id, admin_id, remove, note) on Take Down
+            </div>
+          </td>
+          <td class="mono text-sm muted" data-label="Reporter">anon_handle_11</td>
+          <td class="text-sm" data-label="Reason">Possible academic integrity issue</td>
+          <td data-label="Actions">
+            <div class="flex gap-2" style="justify-content:flex-end;">
+              <button type="button" class="btn btn-danger btn-sm" data-open-takedown data-item="&quot;Answer key to Quiz 2&quot; — Materials, CSC201">Take down</button>
+              <button type="button" class="btn btn-secondary btn-sm">Dismiss</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td data-label="Content">
+            <div style="font-weight:600;">"Off-topic meme in advice field" — Exam Intel, CSC310</div>
+            <div class="db-note mt-2" style="display:inline-flex;">
+              <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/></svg>
+              sp_moderate_content(content_id, admin_id, remove, note) on Take Down
+            </div>
+          </td>
+          <td class="mono text-sm muted" data-label="Reporter">anon_handle_05</td>
+          <td class="text-sm" data-label="Reason">Spam / not useful</td>
+          <td data-label="Actions">
+            <div class="flex gap-2" style="justify-content:flex-end;">
+              <button type="button" class="btn btn-danger btn-sm" data-open-takedown data-item="&quot;Off-topic meme in advice field&quot; — Exam Intel, CSC310">Take down</button>
+              <button type="button" class="btn btn-secondary btn-sm">Dismiss</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="list" data-tabpanel="resolved" hidden>
+    <div class="card-pad" style="text-align:center;color:var(--ink-faint);padding:var(--sp-12) var(--sp-6);">
+      <svg class="icon" style="width:32px;height:32px;margin:0 auto var(--sp-3);" viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg>
+      <p>No resolved reports yet this semester.</p>
+    </div>
+  </div>
+  </div>
+</main>
+
+<!-- Take-down confirmation overlay -->
+<div class="overlay" id="takedown-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="takedown-title">
+  <div class="modal">
+    <form>
+      <div class="modal__head">
+        <div>
+          <p class="text-xs muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:700;">Take down content</p>
+          <h2 id="takedown-title" style="font-size:18px;margin-top:4px;">this submission</h2>
+        </div>
+        <button type="button" class="modal__close" data-close-takedown aria-label="Close">
+          <svg class="icon" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="text-sm muted mb-4">Soft-deletes the Content row and auto-resolves every open report against it. The author can see it was removed and why.</p>
+        <div class="field mb-0">
+          <label for="takedown-note">Note for the record <span class="faint" style="font-weight:400;">(required)</span></label>
+          <textarea class="textarea" id="takedown-note" rows="3" placeholder="e.g. Matches page 3 of the real 2024 final exam — pulled per academic integrity policy." required></textarea>
+        </div>
+        <div class="modal__foot">
+          <button type="button" class="btn btn-secondary" data-close-takedown>Cancel</button>
+          <button type="submit" class="btn btn-danger">Confirm take down</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  (function () {
+    var overlay = document.getElementById("takedown-overlay");
+    var titleEl = document.getElementById("takedown-title");
+    var lastFocused = null;
+    document.querySelectorAll("[data-open-takedown]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        lastFocused = btn;
+        titleEl.textContent = "“" + btn.getAttribute("data-item").replace(/&quot;/g, '"') + "”";
+        overlay.classList.add("is-open");
+        overlay.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        overlay.querySelector("textarea").focus();
+      });
+    });
+    function close() {
+      overlay.classList.remove("is-open");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      if (lastFocused) lastFocused.focus();
+    }
+    document.querySelectorAll("[data-close-takedown]").forEach(function (btn) {
+      btn.addEventListener("click", close);
+    });
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("is-open")) close(); });
+    overlay.querySelector("form").addEventListener("submit", function (e) { e.preventDefault(); close(); });
+  })();
+</script>
+</body>
+</html>

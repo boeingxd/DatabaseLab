@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Submit Study Material — CSS326 — SIIT Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav__inner">
+    <a href="dashboard.html" class="brand">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/><path d="M3 13.5l7 3.5 7-3.5"/></svg>
+      SIIT Study Hub
+    </a>
+    <nav class="navlinks" aria-label="Primary">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="catalogue.html" aria-current="page">Courses</a>
+    </nav>
+    <div class="nav-right">
+      <div class="avatar" title="Touch-ing Yinyong">TY</div>
+    </div>
+    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell shell--narrow">
+  <div class="page-head">
+    <div class="breadcrumb">
+      <a href="course.html">CSS326</a>
+      <svg class="icon icon-sm" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+      <span>Submit Materials</span>
+    </div>
+    <h1>Submit study material</h1>
+    <p class="page-sub">Notes, summaries, or a cheat sheet for future students.</p>
+  </div>
+
+  <form class="card card-pad" id="materials-form">
+    <div class="field">
+      <label for="mtitle">Title</label>
+      <input class="input" type="text" id="mtitle" placeholder="e.g. Recursion & Sorting — full topic summary">
+    </div>
+
+    <div class="field">
+      <label>Type</label>
+      <div class="pillgroup" data-pillgroup>
+        <button type="button" class="pill" aria-pressed="true">Summary</button>
+        <button type="button" class="pill" aria-pressed="false">Cheat Sheet</button>
+        <button type="button" class="pill" aria-pressed="false">Notes</button>
+        <button type="button" class="pill" aria-pressed="false">Worked Problems</button>
+      </div>
+    </div>
+
+    <div class="grid-2" style="align-items:start;">
+      <div class="field">
+        <label for="mbody">Notes (Markdown)</label>
+        <textarea class="textarea" id="mbody" rows="9" placeholder="## Sorting
+- Quicksort: avg O(n log n), worst O(n²)
+- Mergesort: stable, O(n log n) always
+
+## Recursion
+- Always define the base case first…"></textarea>
+      </div>
+      <div class="field">
+        <label>Attachment <span class="faint" style="font-weight:400;">(optional)</span></label>
+        <div class="dropzone" style="min-height:160px;justify-content:center;">
+          <svg class="icon" viewBox="0 0 20 20"><path d="M10 3v10M6 9l4 4 4-4M4 16h12"/></svg>
+          <strong>Attach a file</strong>
+          <span>PDF, image, or text</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-sm faint mb-4">Needs body text <em>or</em> a file — checked in <span class="mono">sp_submit_content</span> (not a table <span class="mono">CHECK</span>, since <span class="mono">file_path</span> now lives on <span class="mono">Content</span>).</p>
+
+    <div class="db-note mb-4">
+      <svg class="icon" viewBox="0 0 20 20"><path d="M10 3l7 3.5L10 10 3 6.5 10 3z"/><path d="M3 10l7 3.5 7-3.5"/></svg>
+      Submit → CALL sp_submit_content(...) — inserts Content + Materials inside one transaction.
+    </div>
+
+    <div class="flex-between">
+      <a href="course.html" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">Submit material</button>
+    </div>
+  </form>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+  document.getElementById("materials-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    window.location.href = "course.html";
+  });
+</script>
+</body>
+</html>
