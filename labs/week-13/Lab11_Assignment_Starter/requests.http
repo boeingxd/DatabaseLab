@@ -1,0 +1,37 @@
+### Assignment 11 test requests (VS Code "REST Client" extension, or Postman)
+
+### All books with stock (and, after Q7, format / pages)
+GET http://localhost:3000/books
+
+### Q7 - only the ebooks (filter on a JSON field)
+GET http://localhost:3000/books?format=ebook
+
+### Q5 - customers with their order count (stored function)
+GET http://localhost:3000/customers
+
+### Customer 2's orders
+GET http://localhost:3000/customers/2/orders
+
+### Q5 - place an order through the procedure (customer 2 buys 2 copies of book 3)
+POST http://localhost:3000/customers/2/orders
+Content-Type: application/json
+
+{ "book_id": 3, "quantity": 2 }
+
+### Q5 - not enough stock (book 5 has only 1 copy) -> the trigger SIGNALs -> expect 409
+POST http://localhost:3000/customers/2/orders
+Content-Type: application/json
+
+{ "book_id": 5, "quantity": 3 }
+
+### Q5 - invalid quantity -> expect 400
+POST http://localhost:3000/customers/2/orders
+Content-Type: application/json
+
+{ "book_id": 1, "quantity": -2 }
+
+### Q5 - cancel an order (replace 5 with a real order id from GET /customers/2/orders)
+DELETE http://localhost:3000/customers/2/orders/5
+
+### Q5 - cancel an order that doesn't exist -> expect 404
+DELETE http://localhost:3000/customers/2/orders/9999

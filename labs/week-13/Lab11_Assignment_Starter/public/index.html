@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignment 11 – Bookstore with Routines, Triggers &amp; JSON</title>
+<style>
+  :root { --teal:#1E8A82; --navy:#1F3864; --red:#D9534F; --amber:#E0A800; --bg:#F5F7FA; --line:#DADFE6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:#1C1C1C; }
+  header { background:var(--navy); color:#fff; padding:14px 24px; }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:4px 0 0; opacity:.8; font-size:13px; }
+  main { display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 24px; max-width:1200px; margin:auto; }
+  section { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px; min-width:0; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { margin:0 0 10px; font-size:16px; color:var(--navy); }
+  h2 .ex { font-size:12px; font-weight:600; color:var(--teal); margin-left:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#EEF2F7; color:var(--navy); }
+  .seats { font-weight:700; }
+  .full { color:var(--red); }
+  .neg { color:#fff; background:var(--red); padding:1px 6px; border-radius:4px; }
+  .muted { color:#999; }
+  .tag { display:inline-block; background:#EAF5F4; color:var(--teal); border-radius:10px; padding:0 8px; margin:1px 2px 1px 0; font-size:12px; }
+  label { font-size:13px; color:#555; display:block; margin:6px 0 2px; }
+  select, input { width:100%; padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; }
+  .row { display:flex; gap:8px; align-items:end; }
+  .row > div { flex:1; min-width:0; }
+  button { background:var(--teal); color:#fff; border:0; border-radius:6px; padding:8px 14px; font-size:14px; cursor:pointer; white-space:nowrap; }
+  button:hover { filter:brightness(1.08); }
+  button.danger { background:var(--red); }
+  button.ghost { background:#fff; color:var(--navy); border:1px solid var(--line); }
+  button.small { padding:4px 10px; font-size:13px; }
+  .hint { font-size:12px; color:#666; margin-top:8px; }
+  .warn { font-size:13px; color:#8a6d00; background:#FFF6D6; border:1px solid #F2E2A6; border-radius:6px; padding:6px 10px; margin:8px 0 0; }
+  .warn:empty { display:none; }
+  #log { font-family: "Courier New", monospace; font-size:13px; max-height:280px; overflow:auto; margin:0; padding:0; list-style:none; }
+  #log li { padding:4px 6px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+  #log li.note { color:var(--navy); background:#F7F9FC; }
+  .s2 { color:var(--teal); } .s4 { color:var(--amber); } .s5 { color:var(--red); }
+  .badge { display:inline-block; min-width:38px; text-align:center; font-weight:700; }
+  .review { border-bottom:1px solid var(--line); padding:6px 0; font-size:14px; }
+  .stars { color:var(--amber); letter-spacing:1px; }
+  .scroll { overflow-x:auto; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; padding:12px; } .row { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CSS326 Assignment 11 – Bookstore: Routines, Triggers &amp; JSON</h1>
+  <p>Front-end for Q5 and Q7. Every panel calls the Express API; the log shows each request, its response and how the stock changed.</p>
+</header>
+
+<main>
+  <!-- Books: stock (triggers) + JSON attributes -->
+  <section class="wide">
+    <h2>Books <span class="ex">stock: Q3–Q5 · format &amp; pages: Q6–Q7</span></h2>
+    <div class="row" style="max-width:360px">
+      <div><label for="formatFilter">Filter by format (a JSON field)</label>
+        <select id="formatFilter">
+          <option value="">All formats</option>
+          <option>hardcover</option><option>paperback</option><option>ebook</option>
+        </select></div>
+    </div>
+    <div class="scroll">
+    <table style="margin-top:8px">
+      <thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Price (THB)</th><th>Stock</th><th>Format</th><th>Pages</th></tr></thead>
+      <tbody id="books"></tbody>
+    </table>
+    </div>
+    <p class="warn" id="bookWarn"></p>
+    <p class="hint">Books come from <code>GET /books</code> (or <code>GET /books?format=ebook</code>). Format and pages are read out of the <code>attributes</code> JSON column with <code>-&gt;&gt;</code>.</p>
+  </section>
+
+  <!-- Customers: stored function -->
+  <section>
+    <h2>Customers <span class="ex">order count: Q5</span></h2>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Orders</th></tr></thead>
+      <tbody id="customers"></tbody>
+    </table>
+    <p class="warn" id="customerWarn"></p>
+    <p class="hint">The Orders column is <code>order_count(id)</code>, your stored function, called inside the SELECT of <code>GET /customers</code>.</p>
+  </section>
+
+  <!-- Place / cancel orders: procedure + triggers -->
+  <section>
+    <h2>Place / cancel an order <span class="ex">Q5</span></h2>
+    <div class="row">
+      <div><label for="customer">Customer</label><select id="customer"></select></div>
+      <div><label for="book">Book</label><select id="book"></select></div>
+      <div style="flex:0 0 80px"><label for="qty">Quantity</label><input id="qty" type="number" min="1" value="1"></div>
+      <div style="flex:0 0 auto"><button id="orderBtn">Order</button></div>
+    </div>
+    <label style="margin-top:12px">This customer's orders</label>
+    <table>
+      <thead><tr><th>Order</th><th>Book</th><th>Qty</th><th></th></tr></thead>
+      <tbody id="orders"></tbody>
+    </table>
+    <p class="hint">Order calls <code>POST /customers/:id/orders</code>; Cancel calls <code>DELETE /customers/:id/orders/:orderId</code>.
+      The log shows how the book's stock changed: it should move by exactly the quantity.</p>
+  </section>
+
+  <!-- Response log -->
+  <section class="wide">
+    <h2>Responses <button class="ghost small" id="clearLog" style="float:right">Clear</button></h2>
+    <ul id="log"></ul>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let books = [];
+let customers = [];
+
+// ---- helpers ------------------------------------------------------------
+async function api(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  return { status: res.status, data };
+}
+
+function log(method, url, status, data) {
+  const li = document.createElement('li');
+  const cls = status < 300 ? 's2' : status < 500 ? 's4' : 's5';
+  li.innerHTML = `<span class="badge ${cls}">${status}</span> ${method} ${escapeHtml(url)} &rarr; ${escapeHtml(JSON.stringify(data))}`;
+  $('log').prepend(li);
+}
+
+function note(html) {
+  const li = document.createElement('li');
+  li.className = 'note';
+  li.innerHTML = html;
+  $('log').prepend(li);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+// stock of one book, read fresh from the API (ignores the format filter)
+async function stockOf(bookId) {
+  const { status, data } = await api('GET', '/books');
+  if (status !== 200) return undefined;
+  return data.find((b) => b.id === bookId)?.stock;
+}
+
+function stockNote(bookId, before, after, expected) {
+  if (before === undefined || after === undefined) return;
+  const diff = after - before;
+  const sign = diff > 0 ? '+' : '';
+  let verdict = '';
+  if (diff === expected) verdict = ' &#10004;';
+  else if (diff !== 0) verdict = ` <span class="neg">expected ${expected > 0 ? '+' : ''}${expected} – is the stock being changed twice?</span>`;
+  note(`Book ${bookId} stock: ${before} &rarr; <b>${after}</b> (${sign}${diff})${verdict}`);
+}
+
+// ---- loaders ------------------------------------------------------------
+async function loadBooks() {
+  const fmt = $('formatFilter').value;
+  const url = fmt ? `/books?format=${encodeURIComponent(fmt)}` : '/books';
+  const { status, data } = await api('GET', url);
+  if (status !== 200) { log('GET', url, status, data); return; }
+  const hasJson = data.length > 0 && 'format' in data[0];
+  $('bookWarn').textContent = hasJson ? ''
+    : 'Format and pages are empty until you add the attributes JSON column (Q6) and read it in controllers/bookController.js (Q7).';
+  if (fmt && data.some((b) => b.format !== undefined && b.format !== fmt)) {
+    $('bookWarn').textContent = 'The format filter is not applied yet – add the WHERE on the JSON field in controllers/bookController.js (Q7).';
+  }
+  const dash = '<span class="muted">–</span>';
+  $('books').innerHTML = data.length === 0
+    ? '<tr><td colspan="7" class="hint">No books match this filter</td></tr>'
+    : data.map((b) => {
+      const s = b.stock;
+      const cls = s < 0 ? 'neg' : s === 0 ? 'full' : '';
+      return `<tr><td>${b.id}</td><td>${escapeHtml(b.title)}</td><td>${escapeHtml(b.author)}</td><td>${b.price}</td>
+        <td class="seats"><span class="${cls}">${s}</span>${s === 0 ? ' (sold out)' : ''}</td>
+        <td>${b.format ? `<span class="tag">${escapeHtml(b.format)}</span>` : dash}</td>
+        <td>${b.pages ?? dash}</td></tr>`;
+    }).join('');
+  if (!fmt) {                                     // keep the drop-down complete
+    books = data;
+    const keep = $('book').value;
+    $('book').innerHTML = books.map((b) => `<option value="${b.id}">${b.id} – ${escapeHtml(b.title)}</option>`).join('');
+    if (keep) $('book').value = keep;
+  }
+}
+
+async function loadCustomers() {
+  const { status, data } = await api('GET', '/customers');
+  if (status !== 200) { log('GET', '/customers', status, data); $('customerWarn').textContent = data.error || ''; return; }
+  customers = data;
+  const hasCount = data.length > 0 && 'orders' in data[0];
+  $('customerWarn').textContent = hasCount ? ''
+    : 'The Orders column is empty until you call order_count(id) in controllers/customerController.js (Q5).';
+  $('customers').innerHTML = customers.map((c) => `<tr><td>${c.id}</td><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.email)}</td>
+      <td>${c.orders ?? '<span class="muted">–</span>'}</td></tr>`).join('');
+  const keep = $('customer').value;
+  $('customer').innerHTML = customers.map((c) => `<option value="${c.id}">${c.id} – ${escapeHtml(c.name)}</option>`).join('');
+  if (keep) $('customer').value = keep;
+}
+
+async function loadOrders() {
+  const cid = $('customer').value;
+  if (!cid) return;
+  const { status, data } = await api('GET', `/customers/${cid}/orders`);
+  if (status !== 200) { log('GET', `/customers/${cid}/orders`, status, data); return; }
+  $('orders').innerHTML = data.length === 0
+    ? '<tr><td colspan="4" class="hint">No orders</td></tr>'
+    : data.map((o) => `<tr><td>${o.order_id}</td><td>${escapeHtml(o.title)}</td><td>${o.quantity}</td>
+        <td><button class="danger small" data-order="${o.order_id}" data-book="${o.book_id}" data-qty="${o.quantity}">Cancel</button></td></tr>`).join('');
+}
+
+async function refresh() {
+  await loadBooks();
+  await loadCustomers();
+  await loadOrders();
+}
+
+// ---- Place an order (procedure + insert trigger) ----------------------------
+$('orderBtn').addEventListener('click', async () => {
+  const cid = $('customer').value;
+  const bid = Number($('book').value);
+  const qty = Number($('qty').value);
+  const before = await stockOf(bid);
+  const url = `/customers/${cid}/orders`;
+  const { status, data } = await api('POST', url, { book_id: bid, quantity: qty });
+  log('POST', `${url} {book_id:${bid}, quantity:${qty}}`, status, data);
+  const after = await stockOf(bid);
+  stockNote(bid, before, after, status === 201 ? -qty : 0);
+  refresh();
+});
+
+// ---- Cancel (delete trigger) ------------------------------------------------
+$('orders').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-order]');
+  if (!btn) return;
+  const cid = $('customer').value;
+  const bid = Number(btn.dataset.book);
+  const qty = Number(btn.dataset.qty);
+  const before = await stockOf(bid);
+  const url = `/customers/${cid}/orders/${btn.dataset.order}`;
+  const { status, data } = await api('DELETE', url);
+  log('DELETE', url, status, data);
+  const after = await stockOf(bid);
+  stockNote(bid, before, after, status === 200 ? qty : 0);
+  refresh();
+});
+
+$('formatFilter').addEventListener('change', loadBooks);
+$('customer').addEventListener('change', loadOrders);
+$('clearLog').addEventListener('click', () => { $('log').innerHTML = ''; });
+
+// ---- start -----------------------------------------------------------------
+(async () => {
+  await loadBooks();
+  await loadCustomers();
+  await loadOrders();
+})();
+</script>
+</body>
+</html>

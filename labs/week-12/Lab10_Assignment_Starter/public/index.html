@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignment 10 – Bookstore Performance & Security</title>
+<style>
+  :root { --teal:#1E8A82; --navy:#1F3864; --red:#D9534F; --amber:#E0A800; --bg:#F5F7FA; --line:#DADFE6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:#1C1C1C; }
+  header { background:var(--navy); color:#fff; padding:14px 24px; }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:4px 0 0; opacity:.8; font-size:13px; }
+  main { display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 24px; max-width:1200px; margin:auto; }
+  section { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px; min-width:0; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { margin:0 0 10px; font-size:16px; color:var(--navy); }
+  h2 .ex { font-size:12px; font-weight:600; color:var(--teal); margin-left:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#EEF2F7; color:var(--navy); }
+  .seats { font-weight:700; }
+  .full { color:var(--red); }
+  .neg { color:#fff; background:var(--red); padding:1px 6px; border-radius:4px; }
+  .muted { color:#999; }
+  .tag { display:inline-block; background:#EAF5F4; color:var(--teal); border-radius:10px; padding:0 8px; margin:1px 2px 1px 0; font-size:12px; }
+  label { font-size:13px; color:#555; display:block; margin:6px 0 2px; }
+  select, input { width:100%; padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; }
+  .row { display:flex; gap:8px; align-items:end; }
+  .row > div { flex:1; min-width:0; }
+  button { background:var(--teal); color:#fff; border:0; border-radius:6px; padding:8px 14px; font-size:14px; cursor:pointer; white-space:nowrap; }
+  button:hover { filter:brightness(1.08); }
+  button.danger { background:var(--red); }
+  button.ghost { background:#fff; color:var(--navy); border:1px solid var(--line); }
+  button.small { padding:4px 10px; font-size:13px; }
+  .hint { font-size:12px; color:#666; margin-top:8px; }
+  .warn { font-size:13px; color:#8a6d00; background:#FFF6D6; border:1px solid #F2E2A6; border-radius:6px; padding:6px 10px; margin:8px 0 0; }
+  .warn:empty { display:none; }
+  #log { font-family: "Courier New", monospace; font-size:13px; max-height:280px; overflow:auto; margin:0; padding:0; list-style:none; }
+  #log li { padding:4px 6px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+  #log li.note { color:var(--navy); background:#F7F9FC; }
+  .s2 { color:var(--teal); } .s4 { color:var(--amber); } .s5 { color:var(--red); }
+  .badge { display:inline-block; min-width:38px; text-align:center; font-weight:700; }
+  .review { border-bottom:1px solid var(--line); padding:6px 0; font-size:14px; }
+  .stars { color:var(--amber); letter-spacing:1px; }
+  .scroll { overflow-x:auto; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; padding:12px; } .row { flex-wrap:wrap; } }
+  .plan td.bad { color:#fff; background:var(--red); font-weight:700; }
+  .plan td.good { color:#fff; background:var(--teal); font-weight:700; }
+  .who { font-size:18px; font-weight:700; }
+  .pill { display:inline-block; border-radius:12px; padding:2px 10px; font-size:12px; font-weight:700; color:#fff; }
+  .pill.bad { background:var(--red); } .pill.good { background:var(--teal); }
+  #log li.alert { background:#FDEDEC; color:#8B1E1B; }
+  code.g { display:block; font-family:"Courier New",monospace; font-size:12px; background:#F4F4F4; border:1px solid var(--line); border-radius:4px; padding:3px 6px; margin:3px 0; overflow-wrap:anywhere; }
+  .ms { color:#666; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CSS326 Assignment 10 – Bookstore: Performance &amp; Security</h1>
+  <p>Bookstore front-end for Q1–Q3 and Q5–Q7. It shows who the app connects as, the query plan, the speed of each search, and anything unsafe.</p>
+</header>
+
+<main>
+  <!-- Connection: least privilege + .env -->
+  <section>
+    <h2>Connection <span class="ex">Q6 &amp; Q7</span></h2>
+    <div><span class="who" id="who">…</span> <span id="whoPill"></span></div>
+    <label>Privileges of this user (SHOW GRANTS)</label>
+    <div id="grants" style="max-height:170px; overflow-y:auto"></div>
+    <p class="warn" id="connWarn"></p>
+    <div style="margin-top:8px"><button class="ghost small" id="whoBtn">Refresh</button></div>
+    <p class="hint">From <code>GET /api/whoami</code> (<code>SELECT CURRENT_USER()</code> and <code>SHOW GRANTS</code>). The user is whoever <code>db.js</code> logs in as; after changing it, save the file and the server restarts.</p>
+  </section>
+
+  <!-- Query plan: indexes + EXPLAIN -->
+  <section>
+    <h2>Query plan <span class="ex">Q1 &amp; Q2</span></h2>
+    <p class="hint" style="margin-top:0" id="planCaption">EXPLAIN for the author search below, with the value you typed.</p>
+    <table class="plan">
+      <thead><tr><th>table</th><th>type</th><th>key</th><th>rows</th><th>Extra</th></tr></thead>
+      <tbody id="plan"><tr><td colspan="5" class="hint">Press Explain</td></tr></tbody>
+    </table>
+    <label style="margin-top:10px">Indexes on books (SHOW INDEX)</label>
+    <div id="indexes"></div>
+    <div class="row" style="margin-top:8px">
+      <div style="flex:0 0 auto"><button id="planBtn">Explain</button></div>
+      <div style="flex:0 0 auto"><button class="ghost" id="idxBtn">Refresh indexes</button></div>
+    </div>
+    <p class="hint"><b>type ALL</b> (red) = full table scan; <b>ref</b> (green) = an index is used. Run <code>CREATE INDEX</code> in Workbench, then press Explain again.</p>
+  </section>
+
+  <!-- Search: injection + speed -->
+  <section class="wide">
+    <h2>Books by author <span class="ex">speed: Q1 &amp; Q2 · injection: Q5</span></h2>
+    <div class="row">
+      <div><label for="q">Exact author name (try Ben Forta)</label><input id="q" value="Ben Forta"></div>
+      <div style="flex:0 0 auto"><button id="searchBtn">Search</button></div>
+      <div style="flex:0 0 auto"><button class="danger" id="attackBtn">Try the attack: ' OR '1'='1</button></div>
+      <div style="flex:0 0 auto"><button class="ghost" id="quoteBtn">Try a single quote: '</button></div>
+    </div>
+    <p class="summary" id="searchSummary"></p>
+    <div class="scroll"><table>
+      <thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th></tr></thead>
+      <tbody id="results"></tbody>
+    </table></div>
+    <p class="hint">Calls <code>GET /api/books/search?author=…</code>. The time is measured on the server (<code>X-Response-Time</code>). After your fix, the attack must return <b>no rows</b> and the single quote must not show a database error.</p>
+  </section>
+
+  <!-- Lookup by id: injection in a number -->
+  <section>
+    <h2>A customer's orders <span class="ex">Q3</span></h2>
+    <div class="row">
+      <div><label for="lid">Customer id (1 – 5005)</label><input id="lid" value="42"></div>
+      <div style="flex:0 0 auto"><button id="lookBtn">Show</button></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div style="flex:0 0 auto"><button class="danger small" id="lookAttack">Try 42 OR 1=1</button></div>
+      <div style="flex:0 0 auto"><button class="ghost small" id="joinPlan">EXPLAIN this join (Q3)</button></div>
+    </div>
+    <p class="summary" id="lookSummary"></p>
+    <div class="scroll" style="max-height:260px; overflow-y:auto"><table>
+      <thead><tr><th>Order</th><th>Title</th><th>Qty</th></tr></thead>
+      <tbody id="lookRows"></tbody>
+    </table></div>
+    <p class="hint">Calls <code>GET /api/customers/:id/orders</code>.</p>
+  </section>
+
+  <!-- Response log -->
+  <section>
+    <h2>Responses <button class="ghost small" id="clearLog" style="float:right">Clear</button></h2>
+    <ul id="log"></ul>
+    <p class="hint">Red lines mean something is unsafe: an injection that worked, or a raw database error sent to the browser.</p>
+  </section>
+</main>
+
+<script>
+const C = {"title": "Assignment 10 \u2013 Bookstore Performance & Security", "h1": "CSS326 Assignment 10 \u2013 Bookstore: Performance &amp; Security", "sub": "Bookstore front-end for Q1\u2013Q3 and Q5\u2013Q7. It shows who the app connects as, the query plan, the speed of each search, and anything unsafe.", "ex_conn": "Q6 &amp; Q7", "ex_plan": "Q1 &amp; Q2", "ex_search": "speed: Q1 &amp; Q2 \u00b7 injection: Q5", "ex_look": "Q3", "what": "author", "table": "books", "search_h": "Books by author", "search_label": "Exact author name (try Ben Forta)", "default": "Ben Forta", "cols_h": ["ID", "Title", "Author", "Price"], "cols": ["id", "title", "author", "price"], "search_url": "/api/books/search?author=", "explain_url": "/api/books/explain?author=", "indexes_url": "/api/books/indexes", "look_h": "A customer's orders", "look_label": "Customer id (1 \u2013 5005)", "look_input": "<input id=\"lid\" value=\"42\">", "look_attack": "42 OR 1=1", "look_cols_h": ["Order", "Title", "Qty"], "look_cols": ["id", "title", "quantity"], "look_url": "/api/customers/:id/orders", "look_url_hint": "/api/customers/:id/orders", "look_extra_btn": "<div style=\"flex:0 0 auto\"><button class=\"ghost small\" id=\"joinPlan\">EXPLAIN this join (Q3)</button></div>", "fix_conn": "Q6: create bookstore_app; Q7: put it in .env and read it in db.js.", "fix_search": "Q5: use a ? placeholder in controllers/bookController.js.", "fix_look": "The same fix as Q5 belongs in controllers/customerController.js (recommended).", "fix_error": "Log the error with console.error and send a generic message (Lab 10, Section 16).", "extra_js": "$('joinPlan').addEventListener('click', async () => {\n  const url = '/api/customers/' + encodeURIComponent($('lid').value) + '/orders/explain';\n  const r = await api(url);\n  log(url, r);\n  if (r.status !== 200) return;\n  $('planCaption').textContent = 'EXPLAIN for the orders-to-books join of customer ' + $('lid').value + ' (Q3).';\n  $('plan').innerHTML = r.data.map((p) => {\n    const cls = p.type === 'ALL' ? 'bad' : (['ref', 'eq_ref', 'const', 'range'].includes(p.type) ? 'good' : '');\n    return `<tr><td>${escapeHtml(p.table ?? '')}</td><td class=\"${cls}\">${escapeHtml(p.type ?? '')}</td>\n      <td>${escapeHtml(p.key ?? 'NULL')}</td><td>${p.rows ?? ''}</td><td>${escapeHtml(p.Extra ?? '')}</td></tr>`;\n  }).join('');\n});"};
+const $ = (id) => document.getElementById(id);
+const ATTACK = "' OR '1'='1";
+
+async function api(url) {
+  const res = await fetch(url);
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  return { status: res.status, data, ms: res.headers.get('X-Response-Time') };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+}
+
+function short(data) {
+  if (Array.isArray(data)) return data.length + ' row' + (data.length === 1 ? '' : 's');
+  const s = JSON.stringify(data);
+  return s.length > 220 ? s.slice(0, 220) + '…' : s;
+}
+
+function leaked(data) {
+  if (!data || Array.isArray(data)) return false;
+  return 'sql' in data || /SQL syntax|ER_|Unknown column|Table '/.test(data.error || '');
+}
+
+function log(url, r, alertText) {
+  const li = document.createElement('li');
+  const cls = r.status < 300 ? 's2' : r.status < 500 ? 's4' : 's5';
+  li.innerHTML = `<span class="badge ${cls}">${r.status}</span> GET ${escapeHtml(url)} &rarr; ${escapeHtml(short(r.data))}` +
+    (r.ms ? ` <span class="ms">(${r.ms} ms)</span>` : '');
+  $('log').prepend(li);
+  if (alertText) {
+    const a = document.createElement('li');
+    a.className = 'alert';
+    a.innerHTML = alertText;
+    $('log').prepend(a);
+  }
+}
+
+// ---- connection ----------------------------------------------------------
+async function loadWho() {
+  const r = await api('/api/whoami');
+  if (r.status !== 200) {
+    $('who').textContent = 'not connected';
+    $('whoPill').innerHTML = '';
+    $('grants').innerHTML = '';
+    $('connWarn').textContent = (r.data.error || 'error') + ' – check the login in db.js / .env.';
+    log('/api/whoami', r);
+    return;
+  }
+  $('who').textContent = r.data.user + '  (database: ' + r.data.database + ')';
+  const isRoot = /^root@/.test(r.data.user);
+  $('whoPill').innerHTML = isRoot ? '<span class="pill bad">root: far too powerful</span>'
+    : '<span class="pill good">least privilege</span>';
+  $('grants').innerHTML = r.data.grants.map((g) => `<code class="g">${escapeHtml(g)}</code>`).join('');
+  $('connWarn').textContent = isRoot
+    ? `The app connects as root. ${C.fix_conn}` : '';
+}
+
+// ---- query plan --------------------------------------------------------------
+async function loadPlan() {
+  const v = $('q').value;
+  const url = C.explain_url + encodeURIComponent(v);
+  const r = await api(url);
+  if (r.status !== 200) { log(url, r); return; }
+  $('planCaption').textContent = 'EXPLAIN for the ' + C.what + ' search below, with the value you typed.';
+  $('plan').innerHTML = r.data.map((p) => {
+    const cls = p.type === 'ALL' ? 'bad' : (['ref', 'eq_ref', 'const', 'range'].includes(p.type) ? 'good' : '');
+    return `<tr><td>${escapeHtml(p.table ?? '')}</td><td class="${cls}">${escapeHtml(p.type ?? '')}</td>
+      <td>${escapeHtml(p.key ?? 'NULL')}</td><td>${p.rows ?? ''}</td><td>${escapeHtml(p.Extra ?? '')}</td></tr>`;
+  }).join('');
+}
+
+async function loadIndexes() {
+  const r = await api(C.indexes_url);
+  if (r.status !== 200) { log(C.indexes_url, r); return; }
+  $('indexes').innerHTML = r.data.map((i) => `<span class="tag">${escapeHtml(i.name)} (${escapeHtml(i.column)})</span>`).join(' ');
+}
+
+// ---- search -------------------------------------------------------------------
+async function search(value) {
+  const url = C.search_url + encodeURIComponent(value);
+  const r = await api(url);
+  let alertText = '';
+  if (r.status === 200 && Array.isArray(r.data)) {
+    $('searchSummary').innerHTML = `<b>${r.data.length}</b> row${r.data.length === 1 ? '' : 's'} for <code>${escapeHtml(value)}</code> in <b>${r.ms} ms</b>` +
+      (r.data.length > 20 ? ' (showing the first 20)' : '');
+    $('results').innerHTML = r.data.length === 0
+      ? `<tr><td colspan="${C.cols.length}" class="hint">No rows</td></tr>`
+      : r.data.slice(0, 20).map((row) => '<tr>' + C.cols.map((k) => `<td>${escapeHtml(row[k] ?? '')}</td>`).join('') + '</tr>').join('');
+    if (value === ATTACK && r.data.length > 0)
+      alertText = `INJECTION WORKED: the input <code>${escapeHtml(ATTACK)}</code> returned ${r.data.length} rows. ${C.fix_search}`;
+  } else {
+    $('searchSummary').innerHTML = `Status ${r.status}: <code>${escapeHtml(JSON.stringify(r.data))}</code>`;
+    $('results').innerHTML = '';
+  }
+  if (leaked(r.data)) alertText = `RAW DATABASE ERROR SENT TO THE BROWSER (it shows your SQL and table names). ${C.fix_error}`;
+  log(url, r, alertText);
+  loadPlan();
+}
+
+// ---- lookup by id -------------------------------------------------------------
+async function lookup(id) {
+  const url = C.look_url.replace(':id', encodeURIComponent(id));
+  const r = await api(url);
+  let alertText = '';
+  if (r.status === 200 && Array.isArray(r.data)) {
+    $('lookSummary').innerHTML = `<b>${r.data.length}</b> row${r.data.length === 1 ? '' : 's'} for id <code>${escapeHtml(id)}</code> in <b>${r.ms} ms</b>` +
+      (r.data.length > 50 ? ' (showing the first 50)' : '');
+    $('lookRows').innerHTML = r.data.length === 0
+      ? `<tr><td colspan="${C.look_cols.length}" class="hint">No rows</td></tr>`
+      : r.data.slice(0, 50).map((row) => '<tr>' + C.look_cols.map((k) => `<td>${escapeHtml(row[k] ?? '')}</td>`).join('') + '</tr>').join('');
+    if (/ OR /i.test(id) && r.data.length > 0)
+      alertText = `INJECTION WORKED: the id <code>${escapeHtml(id)}</code> returned rows that belong to everyone. ${C.fix_look}`;
+  } else {
+    $('lookSummary').innerHTML = `Status ${r.status}: <code>${escapeHtml(JSON.stringify(r.data))}</code>`;
+    $('lookRows').innerHTML = '';
+  }
+  if (leaked(r.data)) alertText = `RAW DATABASE ERROR SENT TO THE BROWSER. ${C.fix_error}`;
+  log(url, r, alertText);
+}
+
+$('whoBtn').addEventListener('click', loadWho);
+$('planBtn').addEventListener('click', () => { loadPlan(); loadIndexes(); });
+$('idxBtn').addEventListener('click', loadIndexes);
+$('searchBtn').addEventListener('click', () => search($('q').value));
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') search($('q').value); });
+$('attackBtn').addEventListener('click', () => { $('q').value = ATTACK; search(ATTACK); });
+$('quoteBtn').addEventListener('click', () => { $('q').value = "'"; search("'"); });
+$('lookBtn').addEventListener('click', () => lookup($('lid').value));
+$('lookAttack').addEventListener('click', () => { $('lid').value = C.look_attack; lookup(C.look_attack); });
+$('clearLog').addEventListener('click', () => { $('log').innerHTML = ''; });
+$('joinPlan').addEventListener('click', async () => {
+  const url = '/api/customers/' + encodeURIComponent($('lid').value) + '/orders/explain';
+  const r = await api(url);
+  log(url, r);
+  if (r.status !== 200) return;
+  $('planCaption').textContent = 'EXPLAIN for the orders-to-books join of customer ' + $('lid').value + ' (Q3).';
+  $('plan').innerHTML = r.data.map((p) => {
+    const cls = p.type === 'ALL' ? 'bad' : (['ref', 'eq_ref', 'const', 'range'].includes(p.type) ? 'good' : '');
+    return `<tr><td>${escapeHtml(p.table ?? '')}</td><td class="${cls}">${escapeHtml(p.type ?? '')}</td>
+      <td>${escapeHtml(p.key ?? 'NULL')}</td><td>${p.rows ?? ''}</td><td>${escapeHtml(p.Extra ?? '')}</td></tr>`;
+  }).join('');
+});
+(async () => {
+  await loadWho();
+  await loadIndexes();
+  await loadPlan();
+  
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+### Assignment 10 test requests (VS Code "REST Client" extension, or Postman)
+
+### Who is the app connected as? (Q6, Q7)
+GET http://localhost:3000/api/whoami
+
+### Q1 / Q2 - the author search and its query plan
+GET http://localhost:3000/api/books/search?author=Ben Forta
+
+###
+GET http://localhost:3000/api/books/explain?author=Ben Forta
+
+###
+GET http://localhost:3000/api/books/indexes
+
+### Q3 - one customer's orders, and the plan of the join
+GET http://localhost:3000/api/customers/42/orders
+
+###
+GET http://localhost:3000/api/customers/42/orders/explain
+
+### Q5 - injection in the author search (starter: all 50,008 books; fixed: [])
+GET http://localhost:3000/api/books/search?author=' OR '1'='1

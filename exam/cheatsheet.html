@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CSS326 Final Exam Cheat Sheet</title>
+<style>
+@page { size: A4; margin: 8mm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font: 7.5pt/1.12 "Arial Narrow", "Helvetica Neue", Arial, sans-serif; color: #000; background: #fff; }
+.page { width: 194mm; height: 280mm; column-count: 3; column-gap: 2.5mm; column-fill: auto;
+        column-rule: 0.3pt solid #999; overflow: hidden; break-after: page; }
+.page:last-child { break-after: auto; }
+@media screen { body { padding: 8mm; } .page { margin: 0 auto 8mm; outline: 1px dashed #bbb; } }
+h1 { font-size: 8pt; color: #fff; padding: 1.2pt 3pt; margin: 0 0 1.5pt; letter-spacing: .3pt;
+     border: 0.8pt solid #000; break-after: avoid; }
+.s1 h1, h1.s1 { background: #1f4e79; } h1.s2 { background: #7a3b00; } h1.s3 { background: #1e5c2e; }
+h1.s4 { background: #5b2a7a; } h1.s5 { background: #8a1c1c; } h1.s6 { background: #005f5f; } h1.s7 { background: #333; }
+h1:not(:first-child) { margin-top: 3pt; }
+h2 { font-size: 7.5pt; margin: 2pt 0 0.5pt; border-bottom: 0.6pt solid #000; break-after: avoid; }
+p, li { margin: 0.4pt 0; }
+ul { list-style: none; }
+li { padding-left: 6pt; text-indent: -6pt; }
+li::before { content: "\2022\00a0"; }
+pre, code { font: 7pt/1.1 Menlo, "DejaVu Sans Mono", Consolas, monospace; }
+pre { white-space: pre-wrap; word-break: break-word; background: #f1f1f1; border-left: 1.4pt solid #000;
+      padding: 1pt 2pt; margin: 1pt 0; break-inside: avoid; }
+code { background: #f1f1f1; padding: 0 0.6pt; }
+pre i, td i { font-style: normal; color: #444; }           /* comments */
+table { border-collapse: collapse; width: 100%; margin: 1pt 0; break-inside: avoid; }
+th, td { border: 0.4pt solid #000; padding: 0.4pt 1.6pt; vertical-align: top; text-align: left; }
+th { background: #d9d9d9; font-weight: 700; }
+td code, th code { background: none; padding: 0; }
+.traps { border: 1.2pt solid #000; background: #fff; padding: 1pt 2.5pt 1.5pt; margin: 2pt 0 1pt; break-inside: avoid; }
+.traps > b:first-child { display: block; background: #000; color: #fff; margin: -1pt -2.5pt 1pt; padding: 0.5pt 2.5pt; letter-spacing: .5pt; }
+.no { font-weight: 700; text-decoration: underline; }
+.title { font-size: 6.5pt; text-align: right; margin-bottom: 1pt; }
+</style>
+</head>
+<body>
+
+<!-- ============================== PAGE 1 ============================== -->
+<div class="page">
+
+<h1 class="s1">1 · DESIGN &amp; NORMALIZATION</h1>
+<table>
+<tr><th>NF</th><th>Test (one line)</th><th>Smell</th><th>Fix</th></tr>
+<tr><td><b>1NF</b></td><td>Every cell holds ONE value; no repeating groups; has a PK</td><td><code>books='SQL, Java'</code> in one cell; columns <code>book1, book2</code></td><td>One row per value, or move to a child table</td></tr>
+<tr><td><b>2NF</b></td><td>1NF + no non-key column depends on only PART of a composite key</td><td>Key (order_id, book_id) but <code>title</code> depends on book_id alone</td><td>Move it to the table keyed by that part (<code>books</code>)</td></tr>
+<tr><td><b>3NF</b></td><td>2NF + no non-key column depends on another NON-key column</td><td><code>orders</code> stores customer_id AND customer email</td><td>Move to <code>customers</code>; keep only the FK</td></tr>
+</table>
+<p><b>Memory:</b> depends on the key (1NF), the whole key (2NF), and nothing but the key (3NF).</p>
+
+<h2>Relationships</h2>
+<table>
+<tr><th>Type</th><th>Example</th><th>How it is stored</th></tr>
+<tr><td><b>1 : N</b></td><td>customers → orders</td><td>FK on the MANY side: <code>orders.customer_id</code></td></tr>
+<tr><td><b>M : N</b></td><td>students ↔ courses</td><td>Junction table <code>enrolments</code> with 2 FKs (= two 1:N)</td></tr>
+</table>
+<pre><i>-- junction table, composite PK</i>
+CREATE TABLE enrolments (
+  student_id INT NOT NULL,
+  course_id  INT NOT NULL,
+  grade      VARCHAR(2),
+  PRIMARY KEY (student_id, course_id),
+  FOREIGN KEY (student_id)
+    REFERENCES students(id),
+  FOREIGN KEY (course_id)
+    REFERENCES courses(id)
+);</pre>
+<p><b>My labs:</b> <code>id</code> PK + <code>UNIQUE KEY uq_student_course (student_id, course_id)</code> does the same job: the PAIR cannot repeat.</p>
+
+<h2>Keys</h2>
+<table>
+<tr><th>Key</th><th>Rule</th></tr>
+<tr><td><b>PK</b></td><td>Unique + NOT NULL; one per table; indexed automatically</td></tr>
+<tr><td><b>FK</b></td><td>Value must exist in the parent's PK (or be NULL if allowed); indexed automatically</td></tr>
+<tr><td><b>UNIQUE</b></td><td>No duplicates; many per table; NULLs allowed (several)</td></tr>
+<tr><td><b>Ref. integrity</b></td><td>No orphans. Child insert with no parent → Error 1452. Delete parent that has children → Error 1451 (RESTRICT) or children go too (CASCADE)</td></tr>
+</table>
+<div class="traps"><b>TRAPS · DESIGN</b>
+<ul>
+<li>FK lives on the MANY side, never on the "one" side.</li>
+<li>M:N cannot be stored with one FK: needs a junction table.</li>
+<li>Composite PK: the PAIR is unique; each column alone may repeat.</li>
+<li>Single-column PK + 1NF ⇒ already 2NF (2NF only bites with a composite key).</li>
+<li>UNIQUE ≠ PK: UNIQUE accepts NULL, PK never does.</li>
+</ul></div>
+
+<h1 class="s2">2 · SQL QUERIES</h1>
+<pre>SELECT major, COUNT(*) AS n   <i>-- 5</i>
+FROM students                 <i>-- 1</i>
+WHERE name LIKE 'S%'          <i>-- 2 rows</i>
+GROUP BY major                <i>-- 3</i>
+HAVING COUNT(*) &gt; 1           <i>-- 4 groups</i>
+ORDER BY n DESC, major ASC    <i>-- 6</i>
+LIMIT 3;                      <i>-- 7</i></pre>
+<h2>WHERE filters</h2>
+<table>
+<tr><td><code>price BETWEEN 400 AND 700</code></td><td>INCLUSIVE: ≥400 AND ≤700</td></tr>
+<tr><td><code>author IN ('Ben Forta','Martin Fowler')</code></td><td>any of the list</td></tr>
+<tr><td><code>name LIKE 'P%'</code></td><td>starts with P</td></tr>
+<tr><td><code>title LIKE '%SQL%'</code></td><td>contains SQL</td></tr>
+<tr><td><code>name LIKE '_a%'</code></td><td>2nd letter is a</td></tr>
+<tr><td><code>major IS NULL</code> / <code>IS NOT NULL</code></td><td>never <code>= NULL</code></td></tr>
+<tr><td><code>price &gt; 500 AND stock &lt;&gt; 0</code></td><td>AND before OR; use ( )</td></tr>
+</table>
+<p><code>%</code> = zero or more characters · <code>_</code> = exactly one · <code>DISTINCT</code> removes duplicate rows · ORDER BY default is ASC.</p>
+
+<h2>Aggregates and NULL</h2>
+<table>
+<tr><td><code>COUNT(*)</code></td><td>counts ROWS (NULLs included)</td></tr>
+<tr><td><code>COUNT(grade)</code></td><td>counts non-NULL grades only</td></tr>
+<tr><td><code>COUNT(DISTINCT author)</code></td><td>different non-NULL values</td></tr>
+<tr><td><code>SUM AVG MIN MAX</code></td><td>skip NULL. AVG = SUM ÷ COUNT(col), not ÷ COUNT(*)</td></tr>
+<tr><td>no rows at all</td><td>COUNT → 0; SUM/AVG/MIN/MAX → NULL</td></tr>
+</table>
+<p>grades A, B, NULL → <code>COUNT(*)</code>=3, <code>COUNT(grade)</code>=2.</p>
+
+<h2>GROUP BY vs HAVING</h2>
+<table>
+<tr><th></th><th>WHERE</th><th>HAVING</th></tr>
+<tr><td>Filters</td><td>single ROWS</td><td>whole GROUPS</td></tr>
+<tr><td>Runs</td><td>BEFORE grouping</td><td>AFTER grouping</td></tr>
+<tr><td>Aggregates</td><td class="no">not allowed</td><td>allowed</td></tr>
+</table>
+<pre>SELECT author, COUNT(*) AS num_books
+FROM books
+WHERE price &gt; 300
+GROUP BY author
+HAVING COUNT(*) &gt; 1;</pre>
+<p><b>Rule:</b> every SELECT column is either in GROUP BY or inside an aggregate.</p>
+
+<h2>JOIN</h2>
+<table>
+<tr><th></th><th>Rows returned</th></tr>
+<tr><td><b>INNER</b> (<code>JOIN</code>)</td><td>one per matching pair; unmatched rows vanish</td></tr>
+<tr><td><b>LEFT</b></td><td>all INNER rows + each unmatched LEFT row once, right side = NULL</td></tr>
+</table>
+<p>14 students, 14 enrolments, 6 students with none → INNER = <b>14</b> rows, LEFT = 14 + 6 = <b>20</b> rows. A left row with k matches appears k times.</p>
+<pre>SELECT c.name, b.title, o.quantity
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+JOIN books b     ON b.id = o.book_id
+WHERE c.name = 'Pim'
+ORDER BY b.title;</pre>
+<pre><i>-- count per student, zeros kept</i>
+SELECT s.id, s.name,
+       COUNT(e.id) AS courses
+FROM students s
+LEFT JOIN enrolments e
+       ON e.student_id = s.id
+GROUP BY s.id, s.name;</pre>
+
+<h2>Subqueries</h2>
+<pre><i>-- IN: students who have an enrolment</i>
+SELECT name FROM students
+WHERE id IN
+  (SELECT student_id FROM enrolments);
+<i>-- EXISTS: same answer, row by row</i>
+SELECT name FROM students s
+WHERE EXISTS (SELECT 1 FROM enrolments e
+              WHERE e.student_id = s.id);
+</pre>
+<p><b>"Has none" (anti-join), 3 ways:</b></p>
+<pre><i>-- 1 NOT EXISTS (always safe)</i>
+SELECT name FROM students s
+WHERE NOT EXISTS
+  (SELECT 1 FROM enrolments e
+   WHERE e.student_id = s.id);
+<i>-- 2 LEFT JOIN ... IS NULL</i>
+SELECT s.name FROM students s
+LEFT JOIN enrolments e
+       ON e.student_id = s.id
+WHERE e.id IS NULL;
+<i>-- 3 NOT IN (only if no NULL in list)</i>
+SELECT name FROM students
+WHERE id NOT IN
+  (SELECT student_id FROM enrolments
+   WHERE student_id IS NOT NULL);</pre>
+<div class="traps"><b>TRAPS · QUERIES</b>
+<ul>
+<li><b>LEFT JOIN + COUNT(*)</b> counts the NULL-filled row → 1 for "no match". <code>COUNT(e.id)</code> → 0.</li>
+<li><b>NOT IN with a NULL</b> in the list returns NOTHING: <code>3 NOT IN (1, 2, NULL)</code> is UNKNOWN. Use NOT EXISTS.</li>
+<li><b>WHERE cannot use aggregates</b> (<code>WHERE COUNT(*) &gt; 1</code> ✗ → HAVING) <b>or SELECT aliases</b> (<code>WHERE n &gt; 1</code> ✗).</li>
+<li><b>BETWEEN is inclusive</b> at both ends.</li>
+<li><code>= NULL</code> is never true → <code>IS NULL</code>.</li>
+<li>Condition on the RIGHT table in WHERE turns a LEFT JOIN into INNER; put it in ON.</li>
+<li><b>UPDATE / DELETE without WHERE hits every row.</b></li>
+<li>LIKE with no % or _ behaves like =.</li>
+</ul></div>
+
+<h1 class="s3">3 · OBJECTS &amp; CONSTRAINTS</h1>
+<pre>CREATE TABLE books (
+  id     INT AUTO_INCREMENT PRIMARY KEY,
+  title  VARCHAR(200) NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  price  DECIMAL(8,2) NOT NULL,
+  stock  INT NOT NULL DEFAULT 0
+);
+CREATE TABLE customers (
+  id    INT AUTO_INCREMENT PRIMARY KEY,
+  name  VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NOT NULL,
+  UNIQUE KEY uq_customers_email (email)
+);
+CREATE TABLE orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  book_id     INT NOT NULL,
+  quantity    INT NOT NULL DEFAULT 1,
+  FOREIGN KEY (customer_id)
+    REFERENCES customers(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_orders_book
+    FOREIGN KEY (book_id)
+    REFERENCES books(id)
+    ON DELETE RESTRICT
+);</pre>
+<table>
+<tr><td><code>AUTO_INCREMENT</code></td><td>Leave the column out of INSERT; MySQL gives the next number. Must be a key; one per table</td></tr>
+<tr><td><code>DEFAULT 0</code></td><td>Used when the column is left out of INSERT</td></tr>
+<tr><td><code>NOT NULL</code></td><td>Value required (Error 1048)</td></tr>
+<tr><td><code>UNIQUE</code></td><td>Duplicate → Error 1062</td></tr>
+</table>
+<h2>ON DELETE (deleting a PARENT row)</h2>
+<table>
+<tr><td><b>RESTRICT</b><br>(default)</td><td>Parent still has children → DELETE refused, Error 1451, nothing changes</td></tr>
+<tr><td><b>CASCADE</b></td><td>Children are deleted automatically with the parent</td></tr>
+<tr><td><b>SET NULL</b></td><td>Child FK becomes NULL (column must allow NULL)</td></tr>
+</table>
+<p>No ON DELETE written (Lab 9, Lab 11) = RESTRICT. Lab 10 schemas use CASCADE.</p>
+<h2>ALTER TABLE</h2>
+<pre>ALTER TABLE courses
+  ADD COLUMN seats INT NOT NULL
+  DEFAULT 30;
+ALTER TABLE courses
+  MODIFY COLUMN title VARCHAR(200)
+  NOT NULL;
+ALTER TABLE courses DROP COLUMN seats;
+ALTER TABLE orders
+  ADD CONSTRAINT fk_orders_book
+  FOREIGN KEY (book_id)
+  REFERENCES books(id);
+ALTER TABLE customers
+  ADD UNIQUE KEY
+  uq_customers_email (email);</pre>
+<pre>UPDATE books SET price = price * 1.10
+WHERE id = 1;
+DELETE FROM orders WHERE id = 7;</pre>
+<h2>VIEW</h2>
+<pre>CREATE VIEW order_details AS
+SELECT o.id AS order_id, c.name,
+       b.title, o.quantity,
+       o.quantity * b.price AS total
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+JOIN books b     ON b.id = o.book_id;
+
+SELECT * FROM order_details
+WHERE total &gt; 1000;
+DROP VIEW order_details;</pre>
+<ul>
+<li>Stores the QUERY, not the data (a saved SELECT with a name).</li>
+<li>Always shows the CURRENT base tables: new order → appears in the view at once.</li>
+<li>Queried like a table. <code>CREATE OR REPLACE VIEW</code> changes it.</li>
+</ul>
+<div class="traps"><b>TRAPS · OBJECTS</b>
+<ul>
+<li>MODIFY replaces the WHOLE definition: restate NOT NULL / DEFAULT or they are lost.</li>
+<li>Create parent before child; drop child before parent.</li>
+<li>FK column type must match the parent PK (BIGINT ↔ BIGINT).</li>
+<li>Default ON DELETE is RESTRICT, not CASCADE.</li>
+<li>A view is not a snapshot or copy; it reruns its query each time.</li>
+<li>AUTO_INCREMENT numbers are not reused (gaps are normal).</li>
+</ul></div>
+</div>
+
+<!-- ============================== PAGE 2 ============================== -->
+<div class="page">
+
+<h1 class="s4">4 · PROCEDURES · TRIGGERS · TRANSACTIONS</h1>
+<pre>DELIMITER //
+CREATE PROCEDURE place_order(
+  IN p_customer INT, IN p_book INT,
+  IN p_qty INT, OUT p_order_id INT)
+BEGIN
+  DECLARE v_stock INT;  <i>-- DECLARE first</i>
+  SELECT stock INTO v_stock
+    FROM books WHERE id = p_book;
+  IF v_stock IS NULL THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'no such book';
+  ELSEIF v_stock &lt; p_qty THEN
+    SET p_order_id = 0;  <i>-- not enough</i>
+  ELSE
+    UPDATE books
+       SET stock = stock - p_qty
+     WHERE id = p_book;
+    INSERT INTO orders
+      (customer_id, book_id, quantity)
+    VALUES (p_customer, p_book, p_qty);
+    SET p_order_id = LAST_INSERT_ID();
+  END IF;
+END //
+DELIMITER ;
+CALL place_order(1, 5, 2, @oid);
+SELECT @oid;</pre>
+<table>
+<tr><td><code>DELIMITER //</code></td><td>So <code>;</code> can appear inside the body. <code>END //</code> ends it; then <code>DELIMITER ;</code></td></tr>
+<tr><td><code>IN</code> / <code>OUT</code></td><td>IN = value in (default). OUT = value back, caller passes <code>@var</code></td></tr>
+<tr><td><code>DECLARE</code></td><td>Local variable, TOP of BEGIN only; <code>SET v = ..</code> assigns</td></tr>
+<tr><td><code>SELECT..INTO</code></td><td>Result → variable; ONE row only (no row → NULL)</td></tr>
+<tr><td><code>IF</code></td><td><code>IF..THEN</code> · <code>ELSEIF..THEN</code> · <code>ELSE</code> · <code>END IF;</code></td></tr>
+<tr><td><code>LAST_INSERT_ID()</code></td><td>AUTO_INCREMENT id of the last INSERT on this connection</td></tr>
+</table>
+<p>Lab 11: <code>CALL count_students(1, @n); SELECT @n;</code> (<code>@n</code> = session variable)</p>
+
+<h2>Trigger</h2>
+<pre>DELIMITER //
+CREATE TRIGGER after_enrolment_insert
+AFTER INSERT ON enrolments
+FOR EACH ROW
+BEGIN
+  UPDATE courses SET seats = seats - 1
+   WHERE id = NEW.course_id
+     AND seats &gt; 0;
+  IF ROW_COUNT() = 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'course is full';
+  END IF;
+END //
+DELIMITER ;</pre>
+<table>
+<tr><th>Event</th><th>OLD.col</th><th>NEW.col</th></tr>
+<tr><td>INSERT</td><td class="no">no</td><td>yes (new row)</td></tr>
+<tr><td>UPDATE</td><td>yes (before)</td><td>yes (after)</td></tr>
+<tr><td>DELETE</td><td>yes (deleted row)</td><td class="no">no</td></tr>
+</table>
+<ul>
+<li>6 kinds: BEFORE / AFTER × INSERT / UPDATE / DELETE.</li>
+<li><b>BEFORE</b>: check or change the row (<code>IF NEW.quantity &lt;= 0 THEN SIGNAL..</code>, <code>SET NEW.x = ..</code>). <b>AFTER</b>: update OTHER tables.</li>
+<li><code>FOR EACH ROW</code>: body runs once per affected row.</li>
+<li><code>SIGNAL SQLSTATE '45000'</code> = user error (Error 1644): cancels the statement that fired the trigger.</li>
+<li>Fires automatically, cannot be CALLed. <code>SHOW TRIGGERS;</code></li>
+</ul>
+
+<h2>Transaction</h2>
+<pre>START TRANSACTION;
+UPDATE courses SET seats = seats - 1
+ WHERE id = 1 AND seats &gt; 0;
+INSERT INTO enrolments
+  (student_id, course_id) VALUES (3, 1);
+COMMIT;      <i>-- keep both</i>
+<i>-- or</i> ROLLBACK;  <i>-- undo both</i></pre>
+<table>
+<tr><td><b>A</b>tomicity</td><td>All statements happen, or none</td></tr>
+<tr><td><b>C</b>onsistency</td><td>Valid state → valid state; constraints hold</td></tr>
+<tr><td><b>I</b>solation</td><td>Others never see uncommitted changes</td></tr>
+<tr><td><b>D</b>urability</td><td>After COMMIT it survives a crash</td></tr>
+</table>
+<div class="traps"><b>TRAPS · PROGRAMMABILITY</b>
+<ul>
+<li><b>A failed statement undoes only ITSELF.</b> Earlier statements stay until you ROLLBACK.</li>
+<li>No START TRANSACTION = autocommit: each statement is saved at once; ROLLBACK does nothing.</li>
+<li>INSERT trigger has no OLD; DELETE has no NEW.</li>
+<li><code>ELSEIF</code> not <code>ELSE IF</code>; DECLARE must come first.</li>
+</ul></div>
+
+<h1 class="s5">5 · NODE.JS (mysql2 + Express)</h1>
+<pre><i>// db.js</i>
+const mysql = require('mysql2/promise');
+const pool = mysql.createPool({
+  host: 'localhost', user: 'root',
+  password: '', database: 'lab11',
+  connectionLimit: 10 });
+module.exports = pool;</pre>
+<pre><i>// SELECT → [rows, fields]</i>
+const [rows] = await pool.execute(
+  'SELECT * FROM books WHERE author = ?',
+  [req.query.author]);
+res.json(rows);    <i>// [] if none; rows[0]</i>
+<i>// INSERT → [result]</i>
+const [result] = await pool.execute(
+  'INSERT INTO books (title, author, '
+  + 'price) VALUES (?, ?, ?)',
+  [title, author, price]);
+res.json({ id: result.insertId });</pre>
+<table>
+<tr><td><code>pool.execute</code></td><td>Prepared statement: SQL shape first, values sent separately. Use with user input</td></tr>
+<tr><td><code>pool.query</code></td><td>Plain query; <code>?</code> values escaped by the driver. Labs: SHOW, EXPLAIN</td></tr>
+<tr><td><code>?</code></td><td>One per VALUE, array order. Not for table/column names</td></tr>
+<tr><td><code>const [rows]</code></td><td>Result is <code>[rows, fields]</code>; take the first item</td></tr>
+<tr><td><code>result</code></td><td><code>.insertId</code> new AUTO_INCREMENT id · <code>.affectedRows</code> rows changed (0 = no match → 404)</td></tr>
+</table>
+<h2>Transaction pattern</h2>
+<pre>const conn = await pool.getConnection();
+try {
+  await conn.beginTransaction();
+  const [u] = await conn.execute(
+    'UPDATE books SET stock = stock - ? '
+    + 'WHERE id = ? AND stock &gt;= ?',
+    [quantity, book_id, quantity]);
+  if (u.affectedRows === 0) {
+    await conn.rollback();
+    return res.status(409).json(
+      { error: 'not enough stock' });
+  }
+  const [r] = await conn.execute(
+    'INSERT INTO orders (customer_id, '
+    + 'book_id, quantity) VALUES (?,?,?)',
+    [req.params.id, book_id, quantity]);
+  await conn.commit();
+  res.status(201).json(
+    { order_id: r.insertId });
+} catch (err) {
+  await conn.rollback();
+  res.status(500).json(
+    { error: err.message });
+} finally {
+  conn.release();  <i>// always runs</i>
+}</pre>
+<h2>Express: where the data arrives</h2>
+<pre>app.use(express.json()); <i>// for req.body</i>
+POST /customers/3/orders?notify=1
+body {"book_id": 5, "quantity": 2}</pre>
+<table>
+<tr><td><code>req.params.id</code></td><td><code>'3'</code></td><td><code>:id</code> in the path</td></tr>
+<tr><td><code>req.query.notify</code></td><td><code>'1'</code></td><td>after the <code>?</code></td></tr>
+<tr><td><code>req.body.book_id</code></td><td><code>5</code></td><td>JSON body</td></tr>
+</table>
+<h2>fetch (front end)</h2>
+<pre>const res = await fetch('/books');
+const books = await res.json();
+</pre>
+<p>POST: <code>fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ book_id: 5 }) })</code></p>
+<div class="traps"><b>TRAPS · NODE</b>
+<ul>
+<li><b>pool.execute is NOT inside the transaction</b> (the pool may use another connection). Every statement goes through <code>conn</code>.</li>
+<li><b>Params arrive as strings</b>: <code>req.params.id</code>, <code>req.query.x</code> are <code>'3'</code> not 3 → <code>Number(..)</code>. Only a JSON body keeps numbers.</li>
+<li>No <code>conn.release()</code> → pool runs out, app hangs.</li>
+<li>Missing <code>await</code> → a Promise, not rows. <code>const rows =</code> without brackets → <code>[rows, fields]</code>.</li>
+<li>fetch needs TWO awaits; no throw on 404/500, check <code>res.ok</code>.</li>
+</ul></div>
+
+<h1 class="s6">6 · SECURITY &amp; PERFORMANCE</h1>
+<pre><i>// UNSAFE: input glued into the SQL</i>
+const sql = "SELECT * FROM books "
+  + "WHERE author = '" + author + "'";
+<i>// attack input:  ' OR '1'='1</i>
+<i>// → WHERE author = '' OR '1'='1'</i>
+<i>//   always true: returns EVERY row</i>
+<i>// SAFE: ? placeholder, value separate</i>
+pool.execute('SELECT * FROM books '
+  + 'WHERE author = ?', [author]);</pre>
+<p>Safe: the value is always DATA, never SQL.</p>
+<h2>Privileges (least privilege)</h2>
+<table>
+<tr><td><b>Data (CRUD)</b></td><td>SELECT, INSERT, UPDATE, DELETE → the APP user</td></tr>
+<tr><td><b>Schema</b></td><td>CREATE, ALTER, DROP → admin only</td></tr>
+</table>
+<pre>CREATE USER 'university_app'@'localhost'
+  IDENTIFIED BY 'app_password';
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON css326_lab10.*
+  TO 'university_app'@'localhost';
+REVOKE DELETE ON css326_lab10.*
+  FROM 'university_app'@'localhost';</pre>
+<p>GRANT .. ON db.* <b>TO</b> user · REVOKE .. ON db.* <b>FROM</b> user · <code>SHOW GRANTS FOR user;</code> · app user running DROP → Error 1142.</p>
+<h2>Indexes</h2>
+<pre>CREATE INDEX idx_books_author
+  ON books (author);
+SHOW INDEX FROM books;</pre>
+<ul>
+<li>A SORTED copy of the column with pointers to rows: MySQL jumps to the match instead of reading every row.</li>
+<li>Automatic on PRIMARY KEY, UNIQUE, FOREIGN KEY.</li>
+<li>Cost: slower INSERT/UPDATE/DELETE, more disk.</li>
+</ul>
+<h2>Sargable = index usable (→ = rewrite as a range)</h2>
+<table>
+<tr><th>WHERE ..</th><th>Index?</th></tr>
+<tr><td><code>author = 'Ben Forta'</code> (bare column)</td><td>YES</td></tr>
+<tr><td><code>price &gt; 500</code> · <code>BETWEEN</code></td><td>YES</td></tr>
+<tr><td><code>title LIKE 'Course 9%'</code></td><td>YES</td></tr>
+<tr><td><code>title LIKE '%SQL'</code></td><td class="no">NO</td></tr>
+<tr><td><code>LEFT(title, 8) = 'Course 9'</code><br>→ <code>title LIKE 'Course 9%'</code></td><td class="no">NO</td></tr>
+<tr><td><code>price * 1.07 &gt; 500</code><br>→ <code>price &gt; 500 / 1.07</code></td><td class="no">NO</td></tr>
+<tr><td><code>YEAR(order_date) = 2026</code><br>→ <code>order_date &gt;= '2026-01-01' AND order_date &lt; '2027-01-01'</code></td><td class="no">NO</td></tr>
+</table>
+<h2>EXPLAIN SELECT ..</h2>
+<table>
+<tr><th>type</th><th>Meaning (best → worst)</th></tr>
+<tr><td><code>const</code></td><td>PK / UNIQUE = value: 1 row</td></tr>
+<tr><td><code>ref</code></td><td>Non-unique index, <code>=</code> match</td></tr>
+<tr><td><code>range</code></td><td>Index range: &gt; &lt; BETWEEN, LIKE 'abc%'</td></tr>
+<tr><td><code>index</code></td><td>Reads the WHOLE index (a full scan)</td></tr>
+<tr><td><code>ALL</code></td><td>Full TABLE scan: every row (slow)</td></tr>
+<tr><th>key</th><td>Index used; <b>NULL = none</b></td></tr>
+<tr><th>rows</th><td>ESTIMATED rows examined</td></tr>
+</table>
+<div class="traps"><b>TRAPS · SECURITY &amp; PERFORMANCE</b>
+<ul>
+<li><b>A function around an indexed column kills the index</b> (<code>LEFT(title,8)</code>, <code>YEAR(d)</code>) → type ALL.</li>
+<li>Leading <code>%</code> in LIKE cannot use the index.</li>
+<li>String concat is injectable with <code>query</code> AND <code>execute</code>; the <code>?</code> protects.</li>
+<li>type <code>index</code> is not "good"; more indexes = slower writes.</li>
+</ul></div>
+
+<h1 class="s7">7 · EXAM SKILLS</h1>
+<pre>FROM/JOIN → WHERE → GROUP BY → HAVING
+  → SELECT → ORDER BY → LIMIT</pre>
+<p>Aliases are born in SELECT: usable in <b>ORDER BY only</b>, not WHERE / GROUP BY / HAVING.</p>
+<p><b>Trace:</b> 1 joined rows (count them) · 2 WHERE crosses out rows · 3 buckets · 4 aggregate (skip NULL) · 5 HAVING crosses out buckets · 6 SELECT · 7 sort.</p>
+<h2>Fill-in-the-blank keywords</h2>
+<table>
+<tr><td><code>INSERT INTO</code> .. <code>VALUES</code></td><td><code>UPDATE</code> .. <code>SET</code> .. <code>WHERE</code></td></tr>
+<tr><td><code>DELETE FROM</code> .. <code>WHERE</code></td><td><code>LEFT JOIN</code> .. <code>ON</code></td></tr>
+<tr><td><code>GROUP BY</code> .. <code>HAVING</code></td><td><code>ORDER BY</code> .. <code>DESC</code></td></tr>
+<tr><td><code>FOREIGN KEY</code> .. <code>REFERENCES</code></td><td><code>ON DELETE CASCADE</code></td></tr>
+<tr><td><code>CREATE VIEW</code> v <code>AS SELECT</code></td><td><code>CREATE INDEX</code> i <code>ON</code> t (c)</td></tr>
+<tr><td><code>AFTER INSERT ON</code> t</td><td><code>FOR EACH ROW</code></td></tr>
+<tr><td><code>GRANT</code> .. <code>ON</code> .. <code>TO</code></td><td><code>REVOKE</code> .. <code>FROM</code></td></tr>
+</table>
+<p><b>Errors:</b> 1062 duplicate · 1452 parent missing · 1451 parent has children · 1048 NULL · 1644 SIGNAL · 1142 denied · 1064 syntax.</p>
+</div>
+
+</body>
+</html>
